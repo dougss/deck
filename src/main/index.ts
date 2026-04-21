@@ -6,9 +6,23 @@ import { PtyRegistry } from './pty-registry'
 import { registerPtyHandlers } from './ipc-handlers'
 import { initDatabase } from './db'
 import { runSmoke } from './db/smoke'
+import { WorkspaceManager } from './workspace-manager'
+import { registerWorkspaceHandlers } from './ipc-handlers-workspaces'
+import { runWsSmoke } from './ws-smoke'
 
-const SMOKE_FLAG = '--deck-smoke'
-const isSmoke = process.argv.includes(SMOKE_FLAG)
+function parseSmokeKind(argv: string[]): 'db' | 'ws' | null {
+  for (const arg of argv) {
+    if (arg === '--deck-smoke') return 'db'
+    if (arg.startsWith('--deck-smoke=')) {
+      const kind = arg.slice('--deck-smoke='.length)
+      if (kind === 'db' || kind === 'ws') return kind
+      return null
+    }
+  }
+  return null
+}
+
+const smokeKind = parseSmokeKind(process.argv)
 
 app.setName('Deck')
 app.setPath('userData', join(app.getPath('appData'), 'Deck'))
@@ -53,8 +67,13 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
-  if (isSmoke) {
+  if (smokeKind === 'db') {
     const code = await runSmoke()
+    app.exit(code)
+    return
+  }
+  if (smokeKind === 'ws') {
+    const code = await runWsSmoke()
     app.exit(code)
     return
   }
@@ -66,11 +85,24 @@ app.whenReady().then(async () => {
   })
 
   const dbPath = join(app.getPath('userData'), 'deck.db')
-  initDatabase(dbPath)
+  const { db } = initDatabase(dbPath)
 
+  const workspaceManager = new WorkspaceManager(db)
+  registerWorkspaceHandlers(workspaceManager, () => mainWindow)
   registerPtyHandlers(ptyRegistry, () => mainWindow)
 
   createWindow()
+
+  queueMicrotask(() => {
+    try {
+      const { changed } = workspaceManager.checkPaths()
+      if (changed.length > 0) {
+        console.log(`[workspace] checkPaths: ${changed.length} changed`)
+      }
+    } catch (err) {
+      console.error('[workspace] checkPaths failed', err)
+    }
+  })
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

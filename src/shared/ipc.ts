@@ -1,4 +1,5 @@
 export type PtyId = string
+export type WorkspaceId = string
 
 export const IPC = {
   PTY_SPAWN: 'pty:spawn',
@@ -6,7 +7,14 @@ export const IPC = {
   PTY_RESIZE: 'pty:resize',
   PTY_KILL: 'pty:kill',
   PTY_DATA: 'pty:data',
-  PTY_EXIT: 'pty:exit'
+  PTY_EXIT: 'pty:exit',
+  WORKSPACE_LIST: 'workspace:list',
+  WORKSPACE_GET: 'workspace:get',
+  WORKSPACE_CREATE: 'workspace:create',
+  WORKSPACE_UPDATE: 'workspace:update',
+  WORKSPACE_DELETE: 'workspace:delete',
+  WORKSPACE_CHECK_PATHS: 'workspace:check-paths',
+  WORKSPACE_UPDATED: 'workspace:updated'
 } as const
 
 export interface PtySpawnRequest {
@@ -61,7 +69,60 @@ export interface DeckEnv {
   home: string
 }
 
+export interface Workspace {
+  id: WorkspaceId
+  name: string
+  accentColor: string
+  path: string
+  needsSetup: boolean
+  ordinal: number
+  createdAt: number
+}
+
+export interface WorkspaceCreateRequest {
+  name: string
+  accentColor: string
+  path: string
+  ordinal?: number
+}
+
+export type WorkspacePatch = Partial<Pick<Workspace, 'name' | 'accentColor' | 'path' | 'ordinal'>>
+
+export interface WorkspaceUpdateRequest {
+  id: WorkspaceId
+  patch: WorkspacePatch
+}
+
+export interface WorkspaceGetRequest {
+  id: WorkspaceId
+}
+
+export interface WorkspaceDeleteRequest {
+  id: WorkspaceId
+}
+
+export type WorkspaceUpdateEvent =
+  | { type: 'created'; workspace: Workspace }
+  | { type: 'updated'; workspace: Workspace }
+  | { type: 'deleted'; id: WorkspaceId }
+
+export interface WorkspaceCheckPathsResult {
+  changed: Workspace[]
+}
+
+export interface DeckWorkspaceApi {
+  list(): Promise<Workspace[]>
+  get(id: WorkspaceId): Promise<Workspace | null>
+  create(req: WorkspaceCreateRequest): Promise<Workspace>
+  update(req: WorkspaceUpdateRequest): Promise<Workspace>
+  delete(id: WorkspaceId): Promise<void>
+  checkPaths(): Promise<WorkspaceCheckPathsResult>
+  onUpdated(cb: (event: WorkspaceUpdateEvent) => void): () => void
+}
+
 export interface DeckApi {
   env: DeckEnv
   pty: DeckPtyApi
+  // TODO(task-5): remove ? when preload bridge lands
+  workspace?: DeckWorkspaceApi
 }
