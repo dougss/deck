@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import { useWorkspaces, useSessions, useSearchQuery } from '@/stores/deck'
-import type { Workspace } from '../../../../shared/ipc'
+import type { Session, Workspace } from '../../../../shared/ipc'
 import { WorkspaceGroup } from './WorkspaceGroup'
 import { WorkspaceDialog } from './WorkspaceDialog'
 import { DeleteWorkspaceDialog } from './DeleteWorkspaceDialog'
+import { SessionDialog } from './SessionDialog'
+import { DeleteSessionDialog } from './DeleteSessionDialog'
 
 export function WorkspaceList(): React.JSX.Element {
   const workspaces = useWorkspaces()
@@ -14,6 +16,9 @@ export function WorkspaceList(): React.JSX.Element {
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Workspace | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Workspace | null>(null)
+
+  const [sessionCreateWs, setSessionCreateWs] = useState<Workspace | null>(null)
+  const [sessionDeleteTarget, setSessionDeleteTarget] = useState<Session | null>(null)
 
   const hasAnyMatch = useMemo(() => {
     if (!searchQuery) return true
@@ -49,6 +54,8 @@ export function WorkspaceList(): React.JSX.Element {
               workspace={ws}
               onEdit={setEditTarget}
               onDelete={setDeleteTarget}
+              onNewSession={setSessionCreateWs}
+              onDeleteSession={setSessionDeleteTarget}
             />
           ))}
 
@@ -69,6 +76,16 @@ export function WorkspaceList(): React.JSX.Element {
           workspace={deleteTarget}
           sessionCount={deleteSessionCount}
           onClose={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {sessionCreateWs && (
+        <SessionDialog workspace={sessionCreateWs} onClose={() => setSessionCreateWs(null)} />
+      )}
+      {sessionDeleteTarget && (
+        <DeleteSessionDialog
+          session={sessionDeleteTarget}
+          onClose={() => setSessionDeleteTarget(null)}
         />
       )}
     </>
