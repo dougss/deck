@@ -199,8 +199,6 @@ export interface DeckSessionApi {
 export interface DeckApi {
   env: DeckEnv
   pty: DeckPtyApi
-  // TODO(task-5): remove ? when preload bridge lands
-  workspace?: DeckWorkspaceApi
-  // TODO(task-5): remove ? when preload bridge lands
-  session?: DeckSessionApi
+  workspace: DeckWorkspaceApi
+  session: DeckSessionApi
 }

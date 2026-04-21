@@ -7,14 +7,20 @@ import {
   type PtyExitEvent,
   type PtyId,
   type PtySpawnRequest,
-  type PtySpawnResponse
+  type PtySpawnResponse,
+  type SessionUpdateEvent,
+  type WorkspaceUpdateEvent
 } from '../shared/ipc'
 
 type DataListener = (chunk: string) => void
 type ExitListener = (info: Omit<PtyExitEvent, 'ptyId'>) => void
+type WorkspaceUpdateListener = (event: WorkspaceUpdateEvent) => void
+type SessionUpdateListener = (event: SessionUpdateEvent) => void
 
 const dataListeners = new Map<PtyId, Set<DataListener>>()
 const exitListeners = new Map<PtyId, Set<ExitListener>>()
+const workspaceUpdateListeners = new Set<WorkspaceUpdateListener>()
+const sessionUpdateListeners = new Set<SessionUpdateListener>()
 
 ipcRenderer.on(IPC.PTY_DATA, (_event, payload: PtyDataEvent) => {
   const set = dataListeners.get(payload.ptyId)
@@ -27,6 +33,26 @@ ipcRenderer.on(IPC.PTY_EXIT, (_event, payload: PtyExitEvent) => {
   if (!set) return
   const info = { exitCode: payload.exitCode, signal: payload.signal }
   for (const cb of set) cb(info)
+})
+
+ipcRenderer.on(IPC.WORKSPACE_UPDATED, (_event, event: WorkspaceUpdateEvent) => {
+  for (const cb of workspaceUpdateListeners) {
+    try {
+      cb(event)
+    } catch (err) {
+      console.error('[preload] workspace:updated listener threw:', err)
+    }
+  }
+})
+
+ipcRenderer.on(IPC.SESSION_UPDATED, (_event, event: SessionUpdateEvent) => {
+  for (const cb of sessionUpdateListeners) {
+    try {
+      cb(event)
+    } catch (err) {
+      console.error('[preload] session:updated listener threw:', err)
+    }
+  }
 })
 
 const deck: DeckApi = {
@@ -72,6 +98,61 @@ const deck: DeckApi = {
         if (!s) return
         s.delete(cb)
         if (s.size === 0) exitListeners.delete(ptyId)
+      }
+    }
+  },
+  workspace: {
+    list() {
+      return ipcRenderer.invoke(IPC.WORKSPACE_LIST)
+    },
+    get(id) {
+      return ipcRenderer.invoke(IPC.WORKSPACE_GET, { id })
+    },
+    create(req) {
+      return ipcRenderer.invoke(IPC.WORKSPACE_CREATE, req)
+    },
+    update(req) {
+      return ipcRenderer.invoke(IPC.WORKSPACE_UPDATE, req)
+    },
+    delete(id) {
+      return ipcRenderer.invoke(IPC.WORKSPACE_DELETE, { id })
+    },
+    checkPaths() {
+      return ipcRenderer.invoke(IPC.WORKSPACE_CHECK_PATHS)
+    },
+    onUpdated(cb) {
+      workspaceUpdateListeners.add(cb)
+      return () => {
+        workspaceUpdateListeners.delete(cb)
+      }
+    }
+  },
+  session: {
+    list(req) {
+      return ipcRenderer.invoke(IPC.SESSION_LIST, req ?? {})
+    },
+    get(id) {
+      return ipcRenderer.invoke(IPC.SESSION_GET, { id })
+    },
+    create(req) {
+      return ipcRenderer.invoke(IPC.SESSION_CREATE, req)
+    },
+    update(req) {
+      return ipcRenderer.invoke(IPC.SESSION_UPDATE, req)
+    },
+    delete(id) {
+      return ipcRenderer.invoke(IPC.SESSION_DELETE, { id })
+    },
+    attach(req) {
+      return ipcRenderer.invoke(IPC.SESSION_ATTACH, req)
+    },
+    detach(req) {
+      return ipcRenderer.invoke(IPC.SESSION_DETACH, req)
+    },
+    onUpdated(cb) {
+      sessionUpdateListeners.add(cb)
+      return () => {
+        sessionUpdateListeners.delete(cb)
       }
     }
   }
