@@ -11,7 +11,9 @@ export function App(): React.JSX.Element {
   return (
     <AppShell>
       <AppBody>
-        <div className="flex-1 min-h-0 overflow-hidden">
+        {/* border-t + border-l: double-border pattern matching mockup (.terminal css).
+            border-l because sidebar is on the left; invert if sidebar moves right. */}
+        <div className="flex-1 min-h-0 overflow-hidden border-t border-l border-tv-border">
           <Terminal cwd={cwd} command={command} />
         </div>
         <StatusBar />

@@ -2,7 +2,7 @@ import { Kbd, StatusDot } from '../ui'
 
 export function StatusBar(): React.JSX.Element {
   return (
-    <div className="h-8 flex-shrink-0 flex items-center justify-between px-4 border-t border-op-border bg-op-zinc-900 font-mono text-[11px]">
+    <div className="h-8 flex-shrink-0 flex items-center justify-between px-4 border-t border-op-border bg-op-surface-2 font-mono text-[11px]">
       <div className="flex items-center gap-[10px]">
         <StatusDot variant="idle" size="sm" />
         <span className="text-op-zinc-300">idle</span>

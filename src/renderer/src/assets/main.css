@@ -5,10 +5,15 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Obsidian chrome surfaces */
+  /* Obsidian chrome surfaces
+   * Hierarchy (light → dark):
+   *   titlebar (#0b0b0d) > surface (#09090b = sidebar/base) > surface-2 (#18181b = header/statusbar)
+   *   > void (#080808 = terminal canvas)
+   * Separation: double-border pattern (--op-border from chrome + --tv-border from terminal side)
+   */
   --op-base: #09090b;
-  --op-surface: #111113;
-  --op-surface-2: #18181b;
+  --op-surface: #09090b; /* sidebar — same layer as base; separation via borders */
+  --op-surface-2: #18181b; /* header / statusbar — elevated above terminal void */
   --op-surface-3: #1f1f23;
   --op-border: #27272a;
   --op-border-dim: #1c1c1f;
@@ -70,7 +75,10 @@
   --color-op-border-dim: var(--op-border-dim);
   --color-op-titlebar: var(--op-titlebar);
 
-  /* Zinc scale — bg-op-zinc-*, text-op-zinc-*, border-op-zinc-* */
+  /* Structural surfaces → use bg-op-surface-* (sidebar, header, statusbar)
+   * Interactive states / small UI elements → use bg-op-zinc-* (hover, Kbd, badges) */
+
+  /* Zinc scale — text-op-zinc-*, bg-op-zinc-* for UI states, border-op-zinc-* */
   --color-op-zinc-50: var(--op-zinc-50);
   --color-op-zinc-100: var(--op-zinc-100);
   --color-op-zinc-200: var(--op-zinc-200);
@@ -91,6 +99,8 @@
 
   --color-tv-void: var(--tv-void);
   --color-tv-void-deep: var(--tv-void-deep);
+  --color-tv-border: var(--tv-border);
+  --color-tv-border-2: var(--tv-border-2);
   --color-tv-text: var(--tv-text);
   --color-tv-text-dim: var(--tv-text-dim);
   --color-tv-text-muted: var(--tv-text-muted);

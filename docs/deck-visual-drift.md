@@ -58,23 +58,23 @@
 - **Quando revisitar:** fase de empacotamento pra distribuição
   (`.dmg`), ou se alguma fonte ultrapassar 150KB no futuro.
 
-### [Task 7] Sidebar vazia — placeholder cinza
+### [Task 7] Sidebar vazia — placeholder
 
 - **Categoria:** layout
 - **Status:** open
-- **Descrição:** mockup mostra sidebar com 3 workspaces, sessões, cores, chevrons e counts. Atual: div `bg-op-zinc-950` de 280px sem conteúdo.
+- **Descrição:** mockup mostra sidebar com 3 workspaces, sessões, cores, chevrons e counts. Atual: div `bg-op-surface` de 280px sem conteúdo.
 - **Motivo:** escopo deliberado — Task 7 entrega shell frame; sidebar é Task 8.
-- **Impacto:** visível (área cinza sem conteúdo à esquerda).
+- **Impacto:** visível (área sem conteúdo à esquerda).
 - **Mitigação planejada:** Task 8 implementa `<Sidebar>` completo.
 - **Quando revisitar:** Task 8.
 
-### [Task 7] Session header vazio — placeholder cinza
+### [Task 7] Session header vazio — placeholder
 
 - **Categoria:** layout
 - **Status:** open
-- **Descrição:** mockup mostra breadcrumb (workspace dot + nome + `/` + sessão), cwd line, badge claude, more button. Atual: div `bg-op-zinc-900` de 50px sem conteúdo.
+- **Descrição:** mockup mostra breadcrumb (workspace dot + nome + `/` + sessão), cwd line, badge claude, more button. Atual: div `bg-op-surface-2` de 50px sem conteúdo.
 - **Motivo:** escopo deliberado — Task 7 entrega shell frame; session header é Task 9.
-- **Impacto:** visível (barra cinza acima do terminal).
+- **Impacto:** visível (barra acima do terminal sem conteúdo).
 - **Mitigação planejada:** Task 9 implementa `<SessionHeader>`.
 - **Quando revisitar:** Task 9.
 
@@ -93,7 +93,38 @@
 - **Categoria:** color
 - **Status:** accepted-as-is
 - **Descrição:** mockup usa `background: #0b0b0d` hardcoded na titlebar. Implementação criou token semântico `--op-titlebar: #0b0b0d`.
-- **Motivo:** cor distinta de `--op-base` (#09090b) e `--op-surface` (#111113). Token preserva intenção do mockup com consistência arquitetural.
+- **Motivo:** cor distinta de `--op-base` (#09090b). Token preserva intenção do mockup com consistência arquitetural.
 - **Impacto:** invisível-ao-usuário. Resultado visual idêntico ao mockup.
 - **Mitigação planejada:** aceito permanentemente.
 - **Quando revisitar:** nunca.
+
+---
+
+## Design system evolution — Task 7 post-fix
+
+### Double-border pattern (descoberta pós-implementação)
+
+O mockup usa dois borders adjacentes para separar zonas no dark theme:
+
+```
+[header bg #18181b]  border-bottom: #27272a  ← chrome side
+─────────────────────────────────────────────
+[terminal bg #080808] border-top: #1a1a1a    ← terminal side
+```
+
+Um border único (#27272a sobre #09090b) tem contraste insuficiente no dark.
+Dois borders sobrepostos criam uma separação de ~2px perceptível.
+Padrão replicado na borda lateral (sidebar `border-r #27272a` + terminal `border-l #1a1a1a`).
+
+**Implementação:** `border-t border-l border-tv-border` no wrapper do Terminal em `App.tsx`.
+
+### Aliases semânticos de superfície
+
+Tokens `--op-zinc-900/950` para backgrounds estruturais substituídos por aliases semânticos:
+
+| Token            | Valor     | Uso semântico                                                                  |
+| ---------------- | --------- | ------------------------------------------------------------------------------ |
+| `--op-surface`   | `#09090b` | sidebar (mesma camada que base; sem distinção cromática, separação via border) |
+| `--op-surface-2` | `#18181b` | header, statusbar (elevado acima do void do terminal)                          |
+
+Regra: `bg-op-zinc-*` reservado para estados interativos (hover, Kbd, badges). Superfícies estruturais usam `bg-op-surface-*`.
