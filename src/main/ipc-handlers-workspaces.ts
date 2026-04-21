@@ -1,5 +1,6 @@
 import { ipcMain, type BrowserWindow } from 'electron'
 import { WorkspaceManager } from './workspace-manager'
+import { SessionManager } from './session-manager'
 import {
   IPC,
   type Workspace,
@@ -12,6 +13,7 @@ import {
 
 export function registerWorkspaceHandlers(
   manager: WorkspaceManager,
+  sessionManager: SessionManager,
   getWindow: () => BrowserWindow | null
 ): void {
   ipcMain.handle(IPC.WORKSPACE_LIST, (): Workspace[] => manager.list())
@@ -31,6 +33,11 @@ export function registerWorkspaceHandlers(
   )
 
   ipcMain.handle(IPC.WORKSPACE_DELETE, (_event, req: WorkspaceDeleteRequest): void => {
+    // Orchestration at the IPC edge: detach any attached sessions in the
+    // workspace BEFORE deleting the workspace row. SQLite CASCADE removes
+    // session rows but wouldn't kill the live PTYs, leaving zombies.
+    // Each manager stays pure; cross-manager knowledge lives only here.
+    sessionManager.detachAllInWorkspace(req.id)
     manager.delete(req.id)
   })
 

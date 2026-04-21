@@ -9,13 +9,18 @@ import { runSmoke } from './db/smoke'
 import { WorkspaceManager } from './workspace-manager'
 import { registerWorkspaceHandlers } from './ipc-handlers-workspaces'
 import { runWsSmoke } from './ws-smoke'
+import { SessionManager } from './session-manager'
+import { registerSessionHandlers } from './ipc-handlers-sessions'
+import { runSessionSmoke } from './session-smoke'
 
-function parseSmokeKind(argv: string[]): 'db' | 'ws' | null {
+type SmokeKind = 'db' | 'ws' | 'session'
+
+function parseSmokeKind(argv: string[]): SmokeKind | null {
   for (const arg of argv) {
     if (arg === '--deck-smoke') return 'db'
     if (arg.startsWith('--deck-smoke=')) {
       const kind = arg.slice('--deck-smoke='.length)
-      if (kind === 'db' || kind === 'ws') return kind
+      if (kind === 'db' || kind === 'ws' || kind === 'session') return kind
       return null
     }
   }
@@ -77,6 +82,11 @@ app.whenReady().then(async () => {
     app.exit(code)
     return
   }
+  if (smokeKind === 'session') {
+    const code = await runSessionSmoke()
+    app.exit(code)
+    return
+  }
 
   electronApp.setAppUserModelId('com.electron')
 
@@ -88,7 +98,9 @@ app.whenReady().then(async () => {
   const { db } = initDatabase(dbPath)
 
   const workspaceManager = new WorkspaceManager(db)
-  registerWorkspaceHandlers(workspaceManager, () => mainWindow)
+  const sessionManager = new SessionManager(db, ptyRegistry)
+  registerWorkspaceHandlers(workspaceManager, sessionManager, () => mainWindow)
+  registerSessionHandlers(sessionManager, () => mainWindow)
   registerPtyHandlers(ptyRegistry, () => mainWindow)
 
   createWindow()

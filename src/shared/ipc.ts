@@ -1,5 +1,7 @@
 export type PtyId = string
 export type WorkspaceId = string
+export type SessionId = string
+export type SessionStatus = 'idle' | 'working'
 
 export const IPC = {
   PTY_SPAWN: 'pty:spawn',
@@ -14,7 +16,15 @@ export const IPC = {
   WORKSPACE_UPDATE: 'workspace:update',
   WORKSPACE_DELETE: 'workspace:delete',
   WORKSPACE_CHECK_PATHS: 'workspace:check-paths',
-  WORKSPACE_UPDATED: 'workspace:updated'
+  WORKSPACE_UPDATED: 'workspace:updated',
+  SESSION_LIST: 'session:list',
+  SESSION_GET: 'session:get',
+  SESSION_CREATE: 'session:create',
+  SESSION_UPDATE: 'session:update',
+  SESSION_DELETE: 'session:delete',
+  SESSION_ATTACH: 'session:attach',
+  SESSION_DETACH: 'session:detach',
+  SESSION_UPDATED: 'session:updated'
 } as const
 
 export interface PtySpawnRequest {
@@ -120,9 +130,77 @@ export interface DeckWorkspaceApi {
   onUpdated(cb: (event: WorkspaceUpdateEvent) => void): () => void
 }
 
+export interface Session {
+  id: SessionId
+  workspaceId: WorkspaceId
+  name: string
+  cwd: string
+  command: string
+  subText: string
+  status: SessionStatus
+  createdAt: number
+  lastActiveAt: number
+  ptyId: PtyId | null
+}
+
+export interface SessionCreateRequest {
+  workspaceId: WorkspaceId
+  name: string
+  cwd: string
+  command: string
+  subText?: string
+}
+
+export type SessionPatch = Partial<Pick<Session, 'name' | 'cwd' | 'command' | 'subText'>>
+
+export interface SessionUpdateRequest {
+  id: SessionId
+  patch: SessionPatch
+}
+
+export interface SessionGetRequest {
+  id: SessionId
+}
+
+export interface SessionDeleteRequest {
+  id: SessionId
+}
+
+export interface SessionListRequest {
+  workspaceId?: WorkspaceId
+}
+
+export interface SessionAttachRequest {
+  id: SessionId
+  cols?: number
+  rows?: number
+}
+
+export interface SessionDetachRequest {
+  id: SessionId
+}
+
+export type SessionUpdateEvent =
+  | { type: 'created'; session: Session }
+  | { type: 'updated'; session: Session }
+  | { type: 'deleted'; id: SessionId }
+
+export interface DeckSessionApi {
+  list(req?: SessionListRequest): Promise<Session[]>
+  get(id: SessionId): Promise<Session | null>
+  create(req: SessionCreateRequest): Promise<Session>
+  update(req: SessionUpdateRequest): Promise<Session>
+  delete(id: SessionId): Promise<void>
+  attach(req: SessionAttachRequest): Promise<Session>
+  detach(req: SessionDetachRequest): Promise<Session>
+  onUpdated(cb: (event: SessionUpdateEvent) => void): () => void
+}
+
 export interface DeckApi {
   env: DeckEnv
   pty: DeckPtyApi
   // TODO(task-5): remove ? when preload bridge lands
   workspace?: DeckWorkspaceApi
+  // TODO(task-5): remove ? when preload bridge lands
+  session?: DeckSessionApi
 }
