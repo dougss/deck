@@ -7,3 +7,6 @@ out
 .env
 .env.*
 !.env.example
+
+# Claude Design handoff bundle — canonical copy lives in docs/mockups/
+deck-fase-2-layout/

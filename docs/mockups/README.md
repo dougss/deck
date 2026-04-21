@@ -10,6 +10,7 @@ implementação**, não protótipos executáveis.
 - **Origem:** Claude Design (claude.ai/design) handoff bundle,
   exportado originalmente como `deck-fase-2-layout/project/Deck
 Main Screen.html`.
+- **Data:** 2026-04-21 (import para o repo).
 - **Propósito:** fonte visual canônica da **Fase 2**. Define
   chrome da janela, sidebar com workspaces, session header,
   terminal canvas, statusbar. Todo token de cor, espaçamento e
