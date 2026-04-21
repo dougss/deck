@@ -108,6 +108,64 @@
 - **Mitigação planejada:** se virar dor em testes longos sem atividade, criar `hooks/useRelativeTime.ts` com `setInterval(30_000)` e usar em `SessionItem`.
 - **Quando revisitar:** se o problema for reportado durante uso real.
 
+### [Task 9] useActiveWorkspace — double find() per render
+
+- **Categoria:** other
+- **Status:** accepted-as-is
+- **Descrição:** `useActiveWorkspace()` executa dois `Array.find()` dentro
+  do mesmo seletor Zustand: um pra encontrar a session pelo `activeSessionId`,
+  outro pra encontrar o workspace pelo `session.workspaceId`.
+- **Motivo:** evita dois `useDeckStore` separados em `SessionHeader` (que
+  causariam re-renders duplos). Um único seletor com dois finds é O(n+m)
+  onde n = sessions, m = workspaces — irrelevante em <30 sessões.
+- **Impacto:** invisível ao usuário. Apenas uma nota de perf para o futuro.
+- **Mitigação planejada:** se `sessions` ultrapassar 30 entradas, desnormalizar
+  com um Map `id → session` no store (O(1) lookup). ~2h de refactor.
+- **Quando revisitar:** se sessions > 30 e perf de sidebar virar problema mensurável.
+
+### [Task 10] App opens with empty state (UX breaking change)
+
+- **Categoria:** interaction
+- **Status:** open
+- **Descrição:** até Task 9, o app abria com Claude Code carregando
+  automaticamente num terminal hardcoded (`cd ~ && claude`). Com a
+  arquitetura multi-session da Task 10, o app agora abre em empty
+  state "No active session" até o usuário criar ou selecionar uma
+  session.
+- **Motivo:** arquitetura multi-session (Task 10) torna "default
+  session implícita" um anti-padrão — haveria ambiguidade sobre qual
+  workspace/cwd usar, e a session não apareceria no DB nem na
+  sidebar. Usuário precisa gerenciar sessions explicitamente.
+- **Impacto:** visível. Primeira execução sem sessions cria fricção:
+  user abre app → não tem nada → precisa DevTools (até Task 12
+  entregar UI de CRUD).
+- **Mitigação planejada:** Task 11 (workspace CRUD) ou Task 12
+  (session CRUD) deve considerar:
+  - auto-criar session default no primeiro boot (ex: Personal/new-session)
+  - empty state com CTA claro ("+ New session" destacado)
+  - onboarding inline com atalhos (⌘N) — Task 14
+- **Quando revisitar:** ao final da Task 12, decidir se empty state
+  atual é tolerável ou se precisa de onboarding dedicado.
+
+### [Task 10] Terminal.tsx + useTerminal.ts deleted
+
+- **Categoria:** other
+- **Status:** resolved
+- **Descrição:** arquivos da Fase 1 (`components/Terminal.tsx` e
+  `hooks/useTerminal.ts`) removidos em favor de
+  `components/terminal/{TerminalHost,SessionTerminal}.tsx`.
+- **Motivo:** modelo Fase 1 — "xterm spawna e possui o próprio PTY"
+  — é incompatível com Fase 2, onde `SessionManager` (backend) é
+  o dono do lifecycle de PTYs via `session.attach/detach`.
+  Manter os arquivos gerava código morto com modelo divergente.
+- **Impacto:** invisível ao usuário. Todos os patterns visuais
+  (tema xterm, font stack, addons FitAddon + WebLinks, ResizeObserver
+  com debounce 100ms, cursorBlink) foram preservados em
+  `SessionTerminal.tsx`. Único comportamento removido: spawn interno
+  e kill no unmount (agora responsabilidade do `SessionManager`).
+- **Mitigação planejada:** nenhuma. Histórico preservado em git.
+- **Quando revisitar:** nunca.
+
 ---
 
 ## Design system evolution — Task 7 post-fix
