@@ -98,6 +98,16 @@
 - **Mitigação planejada:** aceito permanentemente.
 - **Quando revisitar:** nunca.
 
+### [Task 8] SessionItem timestamp não auto-refresha em intervalo
+
+- **Categoria:** interaction
+- **Status:** accepted-as-is
+- **Descrição:** `formatRelativeTime(session.lastActiveAt)` é calculado no render. Não existe `setInterval` refrescando o valor — "2m" não vira "3m" automaticamente sem nova sessão de render.
+- **Motivo:** store re-renderiza a cada update de sessão (PTY data, status change), frequência prática suficiente pra uso normal. Interval dedicado adiciona complexidade sem ganho real durante uso ativo.
+- **Impacto:** visível apenas em sessões completamente ociosas por longos períodos sem nenhuma atividade no store.
+- **Mitigação planejada:** se virar dor em testes longos sem atividade, criar `hooks/useRelativeTime.ts` com `setInterval(30_000)` e usar em `SessionItem`.
+- **Quando revisitar:** se o problema for reportado durante uso real.
+
 ---
 
 ## Design system evolution — Task 7 post-fix

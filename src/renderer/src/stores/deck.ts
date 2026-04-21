@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useShallow } from 'zustand/shallow'
 import { devtools } from 'zustand/middleware'
 import type {
   Session,
@@ -179,6 +180,9 @@ export const useActiveSession = (): Session | null =>
 
 export const useIsWorkspaceExpanded = (id: WorkspaceId): boolean =>
   useDeckStore((s) => !!s.expandedWorkspaceIds[id])
+
+export const useSessionsByWorkspace = (wsId: WorkspaceId): Session[] =>
+  useDeckStore(useShallow((s) => s.sessions.filter((sess) => sess.workspaceId === wsId)))
 
 if (import.meta.env.DEV) {
   // @ts-expect-error intentional dev-only global for debugging

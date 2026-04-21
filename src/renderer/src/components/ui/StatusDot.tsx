@@ -7,8 +7,9 @@ interface StatusDotProps {
 }
 
 const variantClasses: Record<StatusDotVariant, string> = {
-  working: 'bg-success animate-pulse-green',
-  awaiting: 'bg-amber shadow-[0_0_6px_rgba(251,191,36,0.35)]',
+  working:
+    'bg-success animate-pulse-green shadow-[0_0_8px_rgba(74,222,128,0.4),0_0_0_3px_rgba(74,222,128,0.15)]',
+  awaiting: 'bg-amber shadow-[0_0_6px_rgba(251,191,36,0.35),0_0_0_3px_rgba(251,191,36,0.15)]',
   idle: 'bg-op-zinc-600'
 }
 

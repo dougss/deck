@@ -93,6 +93,8 @@
 
   --color-accent: var(--accent);
   --color-accent-bright: var(--accent-bright);
+  --color-accent-glow: var(--accent-glow);
+  --color-accent-subtle: var(--accent-subtle);
 
   --color-success: var(--success);
   --color-amber: var(--amber);
@@ -129,6 +131,21 @@
   50% {
     box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
   }
+}
+
+/* Sidebar custom scrollbar — ::-webkit-scrollbar can't be done in Tailwind v4 inline */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--op-zinc-800);
+  border-radius: 4px;
+}
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background: var(--op-zinc-700);
 }
 
 @layer base {
