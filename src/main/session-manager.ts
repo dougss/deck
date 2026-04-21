@@ -32,6 +32,7 @@ interface SessionRow {
 
 interface AttachRecord {
   ptyId: PtyId
+  pid: number | null
   unlistenExit: () => void
 }
 
@@ -104,7 +105,8 @@ export class SessionManager extends EventEmitter<EventMap> {
       status: toStatus(row.status),
       createdAt: row.created_at,
       lastActiveAt: row.last_active_at,
-      ptyId: record?.ptyId ?? null
+      ptyId: record?.ptyId ?? null,
+      pid: record?.pid ?? null
     }
   }
 
@@ -235,7 +237,7 @@ export class SessionManager extends EventEmitter<EventMap> {
     const unlistenExit = (): void => {
       manager.off('exit', handleExit)
     }
-    this.attached.set(id, { ptyId, unlistenExit })
+    this.attached.set(id, { ptyId, pid: manager.pid, unlistenExit })
 
     this.emit('ptyAttached', { sessionId: id, ptyId, manager })
 

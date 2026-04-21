@@ -142,6 +142,7 @@ export interface Session {
   createdAt: number
   lastActiveAt: number
   ptyId: PtyId | null
+  pid: number | null
 }
 
 export interface SessionCreateRequest {

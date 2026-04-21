@@ -35,6 +35,7 @@ app.setPath('userData', join(app.getPath('appData'), 'Deck'))
 
 const ptyRegistry = new PtyRegistry()
 let mainWindow: BrowserWindow | null = null
+let pathCheckInterval: ReturnType<typeof setInterval> | null = null
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -109,7 +110,11 @@ app.whenReady().then(async () => {
 
   createWindow()
 
-  queueMicrotask(() => {
+  let lastPathCheck = 0
+  function runPathCheck(): void {
+    const now = Date.now()
+    if (now - lastPathCheck < 5_000) return
+    lastPathCheck = now
     try {
       const { changed } = workspaceManager.checkPaths()
       if (changed.length > 0) {
@@ -118,7 +123,11 @@ app.whenReady().then(async () => {
     } catch (err) {
       console.error('[workspace] checkPaths failed', err)
     }
-  })
+  }
+
+  queueMicrotask(runPathCheck)
+  pathCheckInterval = setInterval(runPathCheck, 60_000)
+  app.on('browser-window-focus', runPathCheck)
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -126,6 +135,7 @@ app.whenReady().then(async () => {
 })
 
 app.on('before-quit', () => {
+  if (pathCheckInterval !== null) clearInterval(pathCheckInterval)
   ptyRegistry.killAll()
 })
 
