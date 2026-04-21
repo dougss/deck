@@ -184,6 +184,14 @@ export const useIsWorkspaceExpanded = (id: WorkspaceId): boolean =>
 export const useSessionsByWorkspace = (wsId: WorkspaceId): Session[] =>
   useDeckStore(useShallow((s) => s.sessions.filter((sess) => sess.workspaceId === wsId)))
 
+export const useActiveWorkspace = (): Workspace | null =>
+  useDeckStore((s) => {
+    if (!s.activeSessionId) return null
+    const session = s.sessions.find((x) => x.id === s.activeSessionId)
+    if (!session) return null
+    return s.workspaces.find((w) => w.id === session.workspaceId) ?? null
+  })
+
 if (import.meta.env.DEV) {
   // @ts-expect-error intentional dev-only global for debugging
   window.__deck = useDeckStore
