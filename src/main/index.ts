@@ -10,6 +10,9 @@ import { runSmoke } from './db/smoke'
 const SMOKE_FLAG = '--deck-smoke'
 const isSmoke = process.argv.includes(SMOKE_FLAG)
 
+app.setName('Deck')
+app.setPath('userData', join(app.getPath('appData'), 'Deck'))
+
 const ptyRegistry = new PtyRegistry()
 let mainWindow: BrowserWindow | null = null
 

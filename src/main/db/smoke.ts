@@ -1,6 +1,9 @@
 import { existsSync, rmSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
+import Database from 'better-sqlite3'
 import { initDatabase } from './index'
+import { migrate } from './migrations'
+import { seedDefaults } from './seed'
 
 interface TestResult {
   name: string
@@ -134,6 +137,39 @@ export async function runSmoke(): Promise<number> {
         `CASCADE failed: expected 0 sessions after workspace delete, got ${after.c}. PRAGMA foreign_keys likely off.`
       )
     return `2 sessions -> 0 after workspace delete`
+  })
+
+  record(results, '8. seedDefaults marks missing path as needs_setup=1', () => {
+    const fakePath = '/tmp/workspace-fake-nao-existe-deck-smoke'
+    if (existsSync(fakePath)) rmSync(fakePath, { recursive: true, force: true })
+
+    const isolatedDbPath = '/tmp/deck-smoke-isolated.db'
+    for (const ext of ['', '-wal', '-shm']) {
+      const p = isolatedDbPath + ext
+      if (existsSync(p)) rmSync(p)
+    }
+
+    const db = new Database(isolatedDbPath)
+    db.pragma('foreign_keys = ON')
+    db.pragma('journal_mode = WAL')
+    migrate(db)
+    seedDefaults(db, [{ name: 'FakeMissing', accent: '#ffffff', rel: fakePath }])
+
+    const row = db
+      .prepare('SELECT name, path, needs_setup FROM workspaces WHERE name = ?')
+      .get('FakeMissing') as { name: string; path: string; needs_setup: number } | undefined
+
+    db.close()
+    for (const ext of ['', '-wal', '-shm']) {
+      const p = isolatedDbPath + ext
+      if (existsSync(p)) rmSync(p)
+    }
+
+    if (!row) throw new Error('FakeMissing workspace not inserted')
+    if (row.path !== fakePath) throw new Error(`path mismatch: ${row.path}`)
+    if (row.needs_setup !== 1)
+      throw new Error(`expected needs_setup=1 for missing path, got ${row.needs_setup}`)
+    return `path=${fakePath} → needs_setup=1`
   })
 
   const padded = results.map((r, i) => ({

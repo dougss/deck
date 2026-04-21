@@ -1,6 +1,3 @@
-PRAGMA foreign_keys = ON;
-PRAGMA journal_mode = WAL;
-
 CREATE TABLE workspaces (
   id            TEXT PRIMARY KEY,
   name          TEXT NOT NULL,
