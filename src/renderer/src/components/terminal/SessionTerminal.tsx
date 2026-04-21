@@ -62,6 +62,18 @@ export function SessionTerminal({
       window.deck.pty.resize(ptyId, term.cols, term.rows)
     }
 
+    term.attachCustomKeyEventHandler((e) => {
+      if (e.type !== 'keydown') return true
+      if (e.metaKey && e.key === 'v') {
+        navigator.clipboard
+          .readText()
+          .then((text) => term.paste(text))
+          .catch((err) => console.error('[Deck] Paste failed:', err))
+        return false
+      }
+      return true
+    })
+
     const inputDisposable = term.onData((data) => {
       window.deck.pty.write(ptyId, data)
     })
