@@ -119,7 +119,7 @@ Testar manualmente no terminal antes de implementar spawn no Deck:
 
 ```bash
 cd ~/Projects/deck
-claude --disallowedTools Bash Edit Write --append-system-prompt "You are a planner..." 
+claude --disallowedTools Bash Edit Write --append-system-prompt "You are a planner..."
 ```
 
 Confirmar que:
@@ -444,10 +444,11 @@ Migration runner em `src/main/database.ts` detecta `user_version=1`, roda ALTER,
 ## Riscos e incógnitas
 
 ### R1 — CC pode não respeitar disallowedTools completamente
-
-**Probabilidade:** baixa a média.
-**Impacto:** alto.
-**Mitigação:** teste manual antes da T3 (seção "Verificação"). Se CC editar arquivo mesmo com --disallowedTools, investigar se flag funciona como documentado. Fallback: pedir explícito no system prompt.
+**STATUS: VALIDADO EM 2026-04-21**
+Teste manual confirmou: CC com --disallowedTools Bash Edit Write +
+--append-system-prompt comporta-se corretamente como planner.
+Recusa execução, oferece specs textuais, analisa código via Read tool.
+Ver docs/deck-phase3-validation.md para output completo.
 
 ### R2 — Buffer parsing pra export markdown pode ser frágil
 
