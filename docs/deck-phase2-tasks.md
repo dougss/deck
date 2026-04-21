@@ -7,6 +7,30 @@
 
 ---
 
+## Status — FASE 2 COMPLETA ✅
+
+**Concluída em:** 2026-04-21
+**Tag:** `v0.2.0`
+
+| Task | Título                                               | Status      |
+| ---- | ---------------------------------------------------- | ----------- |
+| 1    | Design tokens + fontes bundled                       | ✅ COMPLETE |
+| 2    | SQLite: infra + schema v1 + seed defaults            | ✅ COMPLETE |
+| 3    | Workspace manager + CRUD + IPC `workspace:*`         | ✅ COMPLETE |
+| 4    | Session manager + CRUD + IPC `session:*`             | ✅ COMPLETE |
+| 5    | Preload bridge: `workspace.*` + `session.*`          | ✅ COMPLETE |
+| 6    | Store Zustand + bootstrap do renderer                | ✅ COMPLETE |
+| 7    | Shell: AppShell + Titlebar + AppBody + primitivos UI | ✅ COMPLETE |
+| 8    | Sidebar estática (read-only)                         | ✅ COMPLETE |
+| 9    | SessionHeader + StatusBar                            | ✅ COMPLETE |
+| 10   | TerminalHost (N xterms com visibility toggle)        | ✅ COMPLETE |
+| 11   | Workspace CRUD UI                                    | ✅ COMPLETE |
+| 12   | Session CRUD UI                                      | ✅ COMPLETE |
+| 13   | Auto-check paths no boot + StatusBar dinâmica        | ✅ COMPLETE |
+| 14   | Keyboard shortcuts + menu nativo macOS               | ✅ COMPLETE |
+
+---
+
 ## Decisões de produto (ACKed)
 
 ### Decisão #1 — Fontes: bundled local
