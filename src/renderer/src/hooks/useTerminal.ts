@@ -26,13 +26,15 @@ export function useTerminal(options: UseTerminalOptions): {
     let resizeTimer: ReturnType<typeof setTimeout> | null = null
 
     const term = new XTerm({
-      fontFamily: 'SF Mono, Menlo, monospace',
+      fontFamily: "'JetBrains Mono', ui-monospace, Menlo, monospace",
       fontSize: 13,
+      lineHeight: 1.4,
       theme: {
-        background: '#0d0e12',
-        foreground: '#e5e5e5',
-        cursor: '#4a9eed',
-        selectionBackground: 'rgba(74, 158, 237, 0.3)'
+        background: '#080808',
+        foreground: '#e8e8e8',
+        cursor: '#7c3aed',
+        cursorAccent: '#080808',
+        selectionBackground: 'rgba(139, 92, 246, 0.25)'
       },
       cursorBlink: true,
       allowProposedApi: true
