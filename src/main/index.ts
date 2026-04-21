@@ -4,6 +4,11 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { PtyRegistry } from './pty-registry'
 import { registerPtyHandlers } from './ipc-handlers'
+import { initDatabase } from './db'
+import { runSmoke } from './db/smoke'
+
+const SMOKE_FLAG = '--deck-smoke'
+const isSmoke = process.argv.includes(SMOKE_FLAG)
 
 const ptyRegistry = new PtyRegistry()
 let mainWindow: BrowserWindow | null = null
@@ -44,12 +49,21 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  if (isSmoke) {
+    const code = await runSmoke()
+    app.exit(code)
+    return
+  }
+
   electronApp.setAppUserModelId('com.electron')
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  const dbPath = join(app.getPath('userData'), 'deck.db')
+  initDatabase(dbPath)
 
   registerPtyHandlers(ptyRegistry, () => mainWindow)
 
