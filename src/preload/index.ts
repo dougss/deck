@@ -9,7 +9,8 @@ import {
   type PtySpawnRequest,
   type PtySpawnResponse,
   type SessionUpdateEvent,
-  type WorkspaceUpdateEvent
+  type WorkspaceUpdateEvent,
+  type DeckShortcutsApi
 } from '../shared/ipc'
 
 type DataListener = (chunk: string) => void
@@ -160,7 +161,29 @@ const deck: DeckApi = {
     pickFolder(): Promise<string | null> {
       return ipcRenderer.invoke(IPC.DIALOG_PICK_FOLDER)
     }
-  }
+  },
+  shortcuts: {
+    onNewSession(cb) {
+      const listener = (): void => cb()
+      ipcRenderer.on(IPC.SHORTCUT_NEW_SESSION, listener)
+      return () => ipcRenderer.removeListener(IPC.SHORTCUT_NEW_SESSION, listener)
+    },
+    onStopSession(cb) {
+      const listener = (): void => cb()
+      ipcRenderer.on(IPC.SHORTCUT_STOP_SESSION, listener)
+      return () => ipcRenderer.removeListener(IPC.SHORTCUT_STOP_SESSION, listener)
+    },
+    onSwitchSession(cb) {
+      const listener = (_ev: Electron.IpcRendererEvent, n: number): void => cb(n)
+      ipcRenderer.on(IPC.SHORTCUT_SWITCH_SESSION, listener)
+      return () => ipcRenderer.removeListener(IPC.SHORTCUT_SWITCH_SESSION, listener)
+    },
+    onFocusSearch(cb) {
+      const listener = (): void => cb()
+      ipcRenderer.on(IPC.SHORTCUT_FOCUS_SEARCH, listener)
+      return () => ipcRenderer.removeListener(IPC.SHORTCUT_FOCUS_SEARCH, listener)
+    }
+  } satisfies DeckShortcutsApi
 }
 
 if (process.contextIsolated) {

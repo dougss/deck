@@ -25,7 +25,11 @@ export const IPC = {
   SESSION_ATTACH: 'session:attach',
   SESSION_DETACH: 'session:detach',
   SESSION_UPDATED: 'session:updated',
-  DIALOG_PICK_FOLDER: 'dialog:pick-folder'
+  DIALOG_PICK_FOLDER: 'dialog:pick-folder',
+  SHORTCUT_NEW_SESSION: 'shortcut:new-session',
+  SHORTCUT_STOP_SESSION: 'shortcut:stop-session',
+  SHORTCUT_SWITCH_SESSION: 'shortcut:switch-session',
+  SHORTCUT_FOCUS_SEARCH: 'shortcut:focus-search'
 } as const
 
 export interface PtySpawnRequest {
@@ -202,10 +206,18 @@ export interface DeckDialogApi {
   pickFolder(): Promise<string | null>
 }
 
+export interface DeckShortcutsApi {
+  onNewSession(cb: () => void): () => void
+  onStopSession(cb: () => void): () => void
+  onSwitchSession(cb: (n: number) => void): () => void
+  onFocusSearch(cb: () => void): () => void
+}
+
 export interface DeckApi {
   env: DeckEnv
   pty: DeckPtyApi
   workspace: DeckWorkspaceApi
   session: DeckSessionApi
   dialog: DeckDialogApi
+  shortcuts: DeckShortcutsApi
 }

@@ -23,12 +23,18 @@ interface DeckState {
   hydrated: boolean
   hydrationError: string | null
 
+  newSessionDialogWorkspaceId: WorkspaceId | null
+  focusSearchTick: number
+
   hydrate: () => Promise<void>
   subscribe: () => () => void
 
   setActive: (id: SessionId | null) => void
   toggleWorkspace: (id: WorkspaceId) => void
   setSearch: (q: string) => void
+  openNewSessionDialog: (workspaceId: WorkspaceId) => void
+  closeNewSessionDialog: () => void
+  triggerFocusSearch: () => void
 }
 
 const sortWorkspaces = (ws: Workspace[]): Workspace[] =>
@@ -55,6 +61,8 @@ export const useDeckStore = create<DeckState>()(
       expandedWorkspaceIds: {},
       hydrated: false,
       hydrationError: null,
+      newSessionDialogWorkspaceId: null,
+      focusSearchTick: 0,
 
       hydrate: async () => {
         try {
@@ -161,7 +169,20 @@ export const useDeckStore = create<DeckState>()(
           'ui/toggleWorkspace'
         ),
 
-      setSearch: (q) => set({ searchQuery: q }, false, 'ui/setSearch')
+      setSearch: (q) => set({ searchQuery: q }, false, 'ui/setSearch'),
+
+      openNewSessionDialog: (workspaceId) =>
+        set({ newSessionDialogWorkspaceId: workspaceId }, false, 'ui/openNewSessionDialog'),
+
+      closeNewSessionDialog: () =>
+        set({ newSessionDialogWorkspaceId: null }, false, 'ui/closeNewSessionDialog'),
+
+      triggerFocusSearch: () =>
+        set(
+          (state) => ({ focusSearchTick: state.focusSearchTick + 1 }),
+          false,
+          'ui/triggerFocusSearch'
+        )
     }),
     { name: 'deck', enabled: import.meta.env.DEV }
   )

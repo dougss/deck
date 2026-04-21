@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -13,6 +13,7 @@ import { SessionManager } from './session-manager'
 import { registerSessionHandlers } from './ipc-handlers-sessions'
 import { runSessionSmoke } from './session-smoke'
 import { registerDialogHandlers } from './ipc-handlers-dialog'
+import { buildApplicationMenu } from './menu'
 
 type SmokeKind = 'db' | 'ws' | 'session'
 
@@ -42,7 +43,6 @@ function createWindow(): void {
     width: 1400,
     height: 900,
     show: false,
-    autoHideMenuBar: true,
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 14 },
     backgroundColor: '#09090b',
@@ -109,6 +109,7 @@ app.whenReady().then(async () => {
   registerDialogHandlers(() => mainWindow)
 
   createWindow()
+  if (mainWindow) Menu.setApplicationMenu(buildApplicationMenu(mainWindow))
 
   let lastPathCheck = 0
   function runPathCheck(): void {

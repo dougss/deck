@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import { Search } from 'lucide-react'
 import { useSearchQuery, useDeckStore } from '@/stores/deck'
 import { Kbd } from '@/components/ui/Kbd'
@@ -5,6 +6,14 @@ import { Kbd } from '@/components/ui/Kbd'
 export function SidebarSearch(): React.JSX.Element {
   const query = useSearchQuery()
   const setSearch = useDeckStore((s) => s.setSearch)
+  const focusSearchTick = useDeckStore((s) => s.focusSearchTick)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (focusSearchTick === 0) return
+    inputRef.current?.focus()
+    inputRef.current?.select()
+  }, [focusSearchTick])
 
   return (
     <div className="px-3 py-3 flex-shrink-0">
@@ -13,6 +22,7 @@ export function SidebarSearch(): React.JSX.Element {
           <Search size={14} />
         </span>
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setSearch(e.target.value)}

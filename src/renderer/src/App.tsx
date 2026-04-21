@@ -2,10 +2,13 @@ import { AppBody } from './components/shell/AppBody'
 import { AppShell } from './components/shell/AppShell'
 import { StatusBar } from './components/session/StatusBar'
 import { TerminalHost } from './components/terminal/TerminalHost'
+import { GlobalSessionDialog } from './components/GlobalSessionDialog'
 import { useDeckBootstrap } from './hooks/useDeckBootstrap'
+import { useDeckShortcuts } from './hooks/useDeckShortcuts'
 
 export function App(): React.JSX.Element {
   useDeckBootstrap()
+  useDeckShortcuts()
   return (
     <AppShell>
       <AppBody>
@@ -16,6 +19,7 @@ export function App(): React.JSX.Element {
         </div>
         <StatusBar />
       </AppBody>
+      <GlobalSessionDialog />
     </AppShell>
   )
 }
