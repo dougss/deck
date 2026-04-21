@@ -12,6 +12,7 @@
   --op-surface-3: #1f1f23;
   --op-border: #27272a;
   --op-border-dim: #1c1c1f;
+  --op-titlebar: #0b0b0d;
 
   /* Accent violet */
   --accent: #7c3aed;
@@ -67,6 +68,20 @@
   --color-op-surface-3: var(--op-surface-3);
   --color-op-border: var(--op-border);
   --color-op-border-dim: var(--op-border-dim);
+  --color-op-titlebar: var(--op-titlebar);
+
+  /* Zinc scale — bg-op-zinc-*, text-op-zinc-*, border-op-zinc-* */
+  --color-op-zinc-50: var(--op-zinc-50);
+  --color-op-zinc-100: var(--op-zinc-100);
+  --color-op-zinc-200: var(--op-zinc-200);
+  --color-op-zinc-300: var(--op-zinc-300);
+  --color-op-zinc-400: var(--op-zinc-400);
+  --color-op-zinc-500: var(--op-zinc-500);
+  --color-op-zinc-600: var(--op-zinc-600);
+  --color-op-zinc-700: var(--op-zinc-700);
+  --color-op-zinc-800: var(--op-zinc-800);
+  --color-op-zinc-900: var(--op-zinc-900);
+  --color-op-zinc-950: var(--op-zinc-950);
 
   --color-accent: var(--accent);
   --color-accent-bright: var(--accent-bright);
@@ -91,6 +106,19 @@
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
   --radius-xl: var(--radius-xl);
+
+  /* Animations */
+  --animate-pulse-green: pulse-green 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
+  }
 }
 
 @layer base {

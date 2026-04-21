@@ -57,3 +57,43 @@
   em `scripts/subset-fonts.js` ou similar.
 - **Quando revisitar:** fase de empacotamento pra distribuição
   (`.dmg`), ou se alguma fonte ultrapassar 150KB no futuro.
+
+### [Task 7] Sidebar vazia — placeholder cinza
+
+- **Categoria:** layout
+- **Status:** open
+- **Descrição:** mockup mostra sidebar com 3 workspaces, sessões, cores, chevrons e counts. Atual: div `bg-op-zinc-950` de 280px sem conteúdo.
+- **Motivo:** escopo deliberado — Task 7 entrega shell frame; sidebar é Task 8.
+- **Impacto:** visível (área cinza sem conteúdo à esquerda).
+- **Mitigação planejada:** Task 8 implementa `<Sidebar>` completo.
+- **Quando revisitar:** Task 8.
+
+### [Task 7] Session header vazio — placeholder cinza
+
+- **Categoria:** layout
+- **Status:** open
+- **Descrição:** mockup mostra breadcrumb (workspace dot + nome + `/` + sessão), cwd line, badge claude, more button. Atual: div `bg-op-zinc-900` de 50px sem conteúdo.
+- **Motivo:** escopo deliberado — Task 7 entrega shell frame; session header é Task 9.
+- **Impacto:** visível (barra cinza acima do terminal).
+- **Mitigação planejada:** Task 9 implementa `<SessionHeader>`.
+- **Quando revisitar:** Task 9.
+
+### [Task 7] StatusBar com dados reais ausentes
+
+- **Categoria:** interaction
+- **Status:** open
+- **Descrição:** mockup mostra "working • claude opus 4.7 • 47.2k tokens" com pulse verde. Atual: "idle • — • —" (placeholders com tooltip "Available in Phase 3 via Claude Code hooks").
+- **Motivo:** dados de status (working/idle) vêm de `activeSession.ptyId` — integração Task 9. Model/tokens dependem de hooks do Claude Code (Fase 3).
+- **Impacto:** visível mas funcionalmente correto como placeholder.
+- **Mitigação planejada:** Task 9 conecta `working/idle` ao store. Fase 3 via hooks oficiais para model/tokens.
+- **Quando revisitar:** Task 9 (working/idle), Fase 3 (model/tokens).
+
+### [Task 7] Token `--op-titlebar` — decisão intencional (não é drift)
+
+- **Categoria:** color
+- **Status:** accepted-as-is
+- **Descrição:** mockup usa `background: #0b0b0d` hardcoded na titlebar. Implementação criou token semântico `--op-titlebar: #0b0b0d`.
+- **Motivo:** cor distinta de `--op-base` (#09090b) e `--op-surface` (#111113). Token preserva intenção do mockup com consistência arquitetural.
+- **Impacto:** invisível-ao-usuário. Resultado visual idêntico ao mockup.
+- **Mitigação planejada:** aceito permanentemente.
+- **Quando revisitar:** nunca.

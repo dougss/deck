@@ -37,10 +37,12 @@ let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
-    width: 1100,
-    height: 720,
+    width: 1400,
+    height: 900,
     show: false,
     autoHideMenuBar: true,
+    titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 16, y: 14 },
     backgroundColor: '#09090b',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {

@@ -1,0 +1,27 @@
+export type StatusDotVariant = 'working' | 'awaiting' | 'idle'
+
+interface StatusDotProps {
+  variant: StatusDotVariant
+  /** sm = 6px (statusbar), md = 8px (session item) */
+  size?: 'sm' | 'md'
+}
+
+const variantClasses: Record<StatusDotVariant, string> = {
+  working: 'bg-success animate-pulse-green',
+  awaiting: 'bg-amber shadow-[0_0_6px_rgba(251,191,36,0.35)]',
+  idle: 'bg-op-zinc-600'
+}
+
+const sizeClasses: Record<'sm' | 'md', string> = {
+  sm: 'w-1.5 h-1.5',
+  md: 'w-2 h-2'
+}
+
+export function StatusDot({ variant, size = 'sm' }: StatusDotProps): React.JSX.Element {
+  return (
+    <span
+      className={`inline-block rounded-full flex-shrink-0 ${sizeClasses[size]} ${variantClasses[variant]}`}
+      aria-label={variant}
+    />
+  )
+}
