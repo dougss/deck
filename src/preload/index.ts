@@ -155,6 +155,11 @@ const deck: DeckApi = {
         sessionUpdateListeners.delete(cb)
       }
     }
+  },
+  dialog: {
+    pickFolder(): Promise<string | null> {
+      return ipcRenderer.invoke(IPC.DIALOG_PICK_FOLDER)
+    }
   }
 }
 

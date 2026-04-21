@@ -9,12 +9,19 @@ import {
 } from '@/stores/deck'
 import { WorkspaceRow } from './WorkspaceRow'
 import { SessionItem } from './SessionItem'
+import { WorkspaceContextMenu } from './WorkspaceContextMenu'
 
 interface WorkspaceGroupProps {
   workspace: Workspace
+  onEdit: (ws: Workspace) => void
+  onDelete: (ws: Workspace) => void
 }
 
-export function WorkspaceGroup({ workspace }: WorkspaceGroupProps): React.JSX.Element {
+export function WorkspaceGroup({
+  workspace,
+  onEdit,
+  onDelete
+}: WorkspaceGroupProps): React.JSX.Element {
   const allSessions = useSessionsByWorkspace(workspace.id)
   const searchQuery = useSearchQuery()
   const isExpanded = useIsWorkspaceExpanded(workspace.id)
@@ -30,12 +37,18 @@ export function WorkspaceGroup({ workspace }: WorkspaceGroupProps): React.JSX.El
 
   return (
     <div className="px-2 mb-0.5">
-      <WorkspaceRow
+      <WorkspaceContextMenu
         workspace={workspace}
-        isExpanded={isExpanded}
-        sessionCount={allSessions.length}
-        onToggle={() => toggleWorkspace(workspace.id)}
-      />
+        onEdit={() => onEdit(workspace)}
+        onDelete={() => onDelete(workspace)}
+      >
+        <WorkspaceRow
+          workspace={workspace}
+          isExpanded={isExpanded}
+          sessionCount={allSessions.length}
+          onToggle={() => toggleWorkspace(workspace.id)}
+        />
+      </WorkspaceContextMenu>
       {isExpanded && sessions.length > 0 && (
         <div className="flex flex-col gap-px pt-0.5 pb-1.5">
           {sessions.map((session) => (

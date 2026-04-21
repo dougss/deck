@@ -24,7 +24,8 @@ export const IPC = {
   SESSION_DELETE: 'session:delete',
   SESSION_ATTACH: 'session:attach',
   SESSION_DETACH: 'session:detach',
-  SESSION_UPDATED: 'session:updated'
+  SESSION_UPDATED: 'session:updated',
+  DIALOG_PICK_FOLDER: 'dialog:pick-folder'
 } as const
 
 export interface PtySpawnRequest {
@@ -196,9 +197,14 @@ export interface DeckSessionApi {
   onUpdated(cb: (event: SessionUpdateEvent) => void): () => void
 }
 
+export interface DeckDialogApi {
+  pickFolder(): Promise<string | null>
+}
+
 export interface DeckApi {
   env: DeckEnv
   pty: DeckPtyApi
   workspace: DeckWorkspaceApi
   session: DeckSessionApi
+  dialog: DeckDialogApi
 }

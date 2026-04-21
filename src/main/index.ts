@@ -12,6 +12,7 @@ import { runWsSmoke } from './ws-smoke'
 import { SessionManager } from './session-manager'
 import { registerSessionHandlers } from './ipc-handlers-sessions'
 import { runSessionSmoke } from './session-smoke'
+import { registerDialogHandlers } from './ipc-handlers-dialog'
 
 type SmokeKind = 'db' | 'ws' | 'session'
 
@@ -104,6 +105,7 @@ app.whenReady().then(async () => {
   registerWorkspaceHandlers(workspaceManager, sessionManager, () => mainWindow)
   registerSessionHandlers(sessionManager, () => mainWindow)
   registerPtyHandlers(ptyRegistry, () => mainWindow)
+  registerDialogHandlers(() => mainWindow)
 
   createWindow()
 
