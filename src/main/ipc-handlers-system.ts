@@ -15,19 +15,24 @@ export function registerSystemHandlers(): void {
     const { preferredEditor, customEditorCommand } = getSettings()
     if (!preferredEditor) return
 
-    let bin: string
-    let extraArgs: string[] = []
+    let command: string
+
+    const escapedPath = req.workspacePath.replace(/"/g, '\\"')
 
     if (preferredEditor === 'custom') {
       if (!customEditorCommand) return
-      const parts = customEditorCommand.split(' ')
-      bin = parts[0]
-      extraArgs = parts.slice(1)
+      if (/[;&|$><`]/.test(customEditorCommand)) {
+        console.error('[system] openInEditor: custom command contains forbidden characters')
+        return
+      }
+      command = `${customEditorCommand} "${escapedPath}"`
     } else {
-      bin = PRESET_BINS[preferredEditor]
+      const bin = PRESET_BINS[preferredEditor]
+      command = `${bin} "${escapedPath}"`
     }
 
-    const child = spawn(bin, [...extraArgs, req.workspacePath], {
+    // Use login shell so Finder-launched app inherits full user PATH
+    const child = spawn('/bin/zsh', ['-ilc', command], {
       detached: true,
       stdio: 'ignore'
     })

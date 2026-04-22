@@ -1,6 +1,6 @@
 {
   "name": "deck",
-  "version": "1.0.0",
+  "version": "0.3.0-beta.1",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "author": "example.com",
@@ -21,6 +21,7 @@
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
+    "build:mac:dir": "electron-vite build && electron-builder --mac --dir",
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
@@ -64,6 +65,40 @@
     "tailwindcss": "^4.2.3",
     "typescript": "^5.9.3",
     "vite": "^7.2.6"
+  },
+  "build": {
+    "appId": "com.douglas.deck",
+    "productName": "Deck",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "${productName}",
+      "sign": false
+    }
   },
   "pnpm": {
     "onlyBuiltDependencies": [
