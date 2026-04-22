@@ -3,6 +3,9 @@ import { homedir } from 'node:os'
 import {
   IPC,
   type DeckApi,
+  type DeckSettings,
+  type DeckSettingsApi,
+  type DeckSystemApi,
   type PtyDataEvent,
   type PtyExitEvent,
   type PtyId,
@@ -183,7 +186,20 @@ const deck: DeckApi = {
       ipcRenderer.on(IPC.SHORTCUT_FOCUS_SEARCH, listener)
       return () => ipcRenderer.removeListener(IPC.SHORTCUT_FOCUS_SEARCH, listener)
     }
-  } satisfies DeckShortcutsApi
+  } satisfies DeckShortcutsApi,
+  settings: {
+    get(): Promise<DeckSettings> {
+      return ipcRenderer.invoke(IPC.SETTINGS_GET)
+    },
+    set(patch: Partial<DeckSettings>): Promise<DeckSettings> {
+      return ipcRenderer.invoke(IPC.SETTINGS_SET, patch)
+    }
+  } satisfies DeckSettingsApi,
+  system: {
+    openInEditor(req: { workspacePath: string }): Promise<void> {
+      return ipcRenderer.invoke(IPC.SYSTEM_OPEN_IN_EDITOR, req)
+    }
+  } satisfies DeckSystemApi
 }
 
 if (process.contextIsolated) {

@@ -29,7 +29,10 @@ export const IPC = {
   SHORTCUT_NEW_SESSION: 'shortcut:new-session',
   SHORTCUT_STOP_SESSION: 'shortcut:stop-session',
   SHORTCUT_SWITCH_SESSION: 'shortcut:switch-session',
-  SHORTCUT_FOCUS_SEARCH: 'shortcut:focus-search'
+  SHORTCUT_FOCUS_SEARCH: 'shortcut:focus-search',
+  SETTINGS_GET: 'settings:get',
+  SETTINGS_SET: 'settings:set',
+  SYSTEM_OPEN_IN_EDITOR: 'system:open-in-editor'
 } as const
 
 export interface PtySpawnRequest {
@@ -213,6 +216,27 @@ export interface DeckShortcutsApi {
   onFocusSearch(cb: () => void): () => void
 }
 
+export type EditorPreset = 'zed' | 'cursor' | 'vscode' | 'custom'
+
+export interface DeckSettings {
+  preferredEditor: EditorPreset | null
+  customEditorCommand: string | null
+  defaultExecutorCommand: string
+}
+
+export interface OpenInEditorRequest {
+  workspacePath: string
+}
+
+export interface DeckSettingsApi {
+  get(): Promise<DeckSettings>
+  set(patch: Partial<DeckSettings>): Promise<DeckSettings>
+}
+
+export interface DeckSystemApi {
+  openInEditor(req: OpenInEditorRequest): Promise<void>
+}
+
 export interface DeckApi {
   env: DeckEnv
   pty: DeckPtyApi
@@ -220,4 +244,6 @@ export interface DeckApi {
   session: DeckSessionApi
   dialog: DeckDialogApi
   shortcuts: DeckShortcutsApi
+  settings: DeckSettingsApi
+  system: DeckSystemApi
 }

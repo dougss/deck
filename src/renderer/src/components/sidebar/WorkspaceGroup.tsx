@@ -14,7 +14,9 @@ import { WorkspaceContextMenu } from './WorkspaceContextMenu'
 
 interface WorkspaceGroupProps {
   workspace: Workspace
+  openInEditorLabel: string
   onEdit: (ws: Workspace) => void
+  onOpenInEditor: (ws: Workspace) => void
   onDelete: (ws: Workspace) => void
   onNewSession: (ws: Workspace) => void
   onDeleteSession: (session: Session) => void
@@ -22,7 +24,9 @@ interface WorkspaceGroupProps {
 
 export function WorkspaceGroup({
   workspace,
+  openInEditorLabel,
   onEdit,
+  onOpenInEditor,
   onDelete,
   onNewSession,
   onDeleteSession
@@ -58,7 +62,9 @@ export function WorkspaceGroup({
     <div className="px-2 mb-0.5">
       <WorkspaceContextMenu
         workspace={workspace}
+        openInEditorLabel={openInEditorLabel}
         onEdit={() => onEdit(workspace)}
+        onOpenInEditor={() => onOpenInEditor(workspace)}
         onDelete={() => onDelete(workspace)}
       >
         <WorkspaceRow

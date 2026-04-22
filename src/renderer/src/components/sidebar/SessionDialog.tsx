@@ -13,10 +13,15 @@ import {
 
 interface SessionDialogProps {
   workspace: Workspace
+  defaultCommand?: string
   onClose: () => void
 }
 
-export function SessionDialog({ workspace, onClose }: SessionDialogProps): React.JSX.Element {
+export function SessionDialog({
+  workspace,
+  defaultCommand = 'claude',
+  onClose
+}: SessionDialogProps): React.JSX.Element {
   const [name, setName] = useState(`${workspace.name}/new-session`)
   const [cwd, setCwd] = useState(workspace.path)
   const [subText, setSubText] = useState('')
@@ -49,7 +54,7 @@ export function SessionDialog({ workspace, onClose }: SessionDialogProps): React
         workspaceId: workspace.id,
         name: name.trim(),
         cwd: cwd.trim(),
-        command: 'claude',
+        command: defaultCommand,
         subText: subText.trim()
       })
       onClose()

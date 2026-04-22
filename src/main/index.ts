@@ -13,6 +13,8 @@ import { SessionManager } from './session-manager'
 import { registerSessionHandlers } from './ipc-handlers-sessions'
 import { runSessionSmoke } from './session-smoke'
 import { registerDialogHandlers } from './ipc-handlers-dialog'
+import { registerSettingsHandlers } from './ipc-handlers-settings'
+import { registerSystemHandlers } from './ipc-handlers-system'
 import { buildApplicationMenu } from './menu'
 
 type SmokeKind = 'db' | 'ws' | 'session'
@@ -107,6 +109,8 @@ app.whenReady().then(async () => {
   registerSessionHandlers(sessionManager, () => mainWindow)
   registerPtyHandlers(ptyRegistry, () => mainWindow)
   registerDialogHandlers(() => mainWindow)
+  registerSettingsHandlers()
+  registerSystemHandlers()
 
   createWindow()
   if (mainWindow) Menu.setApplicationMenu(buildApplicationMenu(mainWindow))

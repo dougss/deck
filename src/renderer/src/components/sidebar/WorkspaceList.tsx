@@ -1,14 +1,23 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Plus } from 'lucide-react'
 import { useWorkspaces, useSessions, useSearchQuery } from '@/stores/deck'
-import type { Session, Workspace } from '../../../../shared/ipc'
+import type { DeckSettings, Session, Workspace } from '../../../../shared/ipc'
 import { WorkspaceGroup } from './WorkspaceGroup'
 import { WorkspaceDialog } from './WorkspaceDialog'
 import { DeleteWorkspaceDialog } from './DeleteWorkspaceDialog'
 import { SessionDialog } from './SessionDialog'
 import { DeleteSessionDialog } from './DeleteSessionDialog'
+import { EditorPreferenceDialog } from '../settings/EditorPreferenceDialog'
 
-export function WorkspaceList(): React.JSX.Element {
+interface WorkspaceListProps {
+  settings: DeckSettings | null
+  onSettingsRefresh: () => void
+}
+
+export function WorkspaceList({
+  settings,
+  onSettingsRefresh
+}: WorkspaceListProps): React.JSX.Element {
   const workspaces = useWorkspaces()
   const allSessions = useSessions()
   const searchQuery = useSearchQuery()
@@ -20,6 +29,8 @@ export function WorkspaceList(): React.JSX.Element {
   const [sessionCreateWs, setSessionCreateWs] = useState<Workspace | null>(null)
   const [sessionDeleteTarget, setSessionDeleteTarget] = useState<Session | null>(null)
 
+  const [editorPrefTarget, setEditorPrefTarget] = useState<Workspace | null>(null)
+
   const hasAnyMatch = useMemo(() => {
     if (!searchQuery) return true
     const q = searchQuery.toLowerCase()
@@ -29,6 +40,25 @@ export function WorkspaceList(): React.JSX.Element {
   const deleteSessionCount = useMemo(
     () => (deleteTarget ? allSessions.filter((s) => s.workspaceId === deleteTarget.id).length : 0),
     [allSessions, deleteTarget]
+  )
+
+  const openInEditorLabel = useMemo(() => {
+    if (!settings?.preferredEditor) return 'Open in IDE…'
+    if (settings.preferredEditor === 'zed') return 'Open in Zed'
+    if (settings.preferredEditor === 'cursor') return 'Open in Cursor'
+    if (settings.preferredEditor === 'vscode') return 'Open in VS Code'
+    return 'Open in Editor…'
+  }, [settings])
+
+  const handleOpenInEditor = useCallback(
+    (ws: Workspace): void => {
+      if (!settings?.preferredEditor) {
+        setEditorPrefTarget(ws)
+        return
+      }
+      void window.deck.system.openInEditor({ workspacePath: ws.path })
+    },
+    [settings]
   )
 
   return (
@@ -52,7 +82,9 @@ export function WorkspaceList(): React.JSX.Element {
             <WorkspaceGroup
               key={ws.id}
               workspace={ws}
+              openInEditorLabel={openInEditorLabel}
               onEdit={setEditTarget}
+              onOpenInEditor={handleOpenInEditor}
               onDelete={setDeleteTarget}
               onNewSession={setSessionCreateWs}
               onDeleteSession={setSessionDeleteTarget}
@@ -80,12 +112,27 @@ export function WorkspaceList(): React.JSX.Element {
       )}
 
       {sessionCreateWs && (
-        <SessionDialog workspace={sessionCreateWs} onClose={() => setSessionCreateWs(null)} />
+        <SessionDialog
+          workspace={sessionCreateWs}
+          defaultCommand={settings?.defaultExecutorCommand ?? 'claude'}
+          onClose={() => setSessionCreateWs(null)}
+        />
       )}
       {sessionDeleteTarget && (
         <DeleteSessionDialog
           session={sessionDeleteTarget}
           onClose={() => setSessionDeleteTarget(null)}
+        />
+      )}
+
+      {editorPrefTarget && (
+        <EditorPreferenceDialog
+          workspacePath={editorPrefTarget.path}
+          onSaved={() => {
+            setEditorPrefTarget(null)
+            onSettingsRefresh()
+          }}
+          onClose={() => setEditorPrefTarget(null)}
         />
       )}
     </>

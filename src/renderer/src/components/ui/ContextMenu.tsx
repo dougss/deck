@@ -47,6 +47,7 @@ export function ContextMenuItem({
         destructive
           ? 'text-red-400 data-[highlighted]:bg-red-900/25 data-[highlighted]:text-red-300'
           : 'text-op-zinc-200 data-[highlighted]:bg-op-zinc-800 data-[highlighted]:text-op-zinc-50',
+        'data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none',
         className
       ]
         .filter(Boolean)

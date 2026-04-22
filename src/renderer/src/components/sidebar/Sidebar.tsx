@@ -1,15 +1,28 @@
+import { useState, useEffect, useCallback } from 'react'
+import type { DeckSettings } from '../../../../shared/ipc'
 import { SidebarHeader } from './SidebarHeader'
 import { SidebarSearch } from './SidebarSearch'
 import { WorkspaceList } from './WorkspaceList'
 import { SidebarFooter } from './SidebarFooter'
 
 export function Sidebar(): React.JSX.Element {
+  const [settings, setSettings] = useState<DeckSettings | null>(null)
+
+  const refreshSettings = useCallback(async () => {
+    const s = await window.deck.settings.get()
+    setSettings(s)
+  }, [])
+
+  useEffect(() => {
+    void refreshSettings()
+  }, [refreshSettings])
+
   return (
     <aside className="w-[280px] flex-shrink-0 bg-op-surface border-r border-op-border flex flex-col">
       <SidebarHeader />
       <SidebarSearch />
-      <WorkspaceList />
-      <SidebarFooter />
+      <WorkspaceList settings={settings} onSettingsRefresh={refreshSettings} />
+      <SidebarFooter onSettingsSaved={refreshSettings} />
     </aside>
   )
 }
