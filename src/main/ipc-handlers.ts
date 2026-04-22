@@ -48,7 +48,7 @@ export function registerPtyHandlers(
       win.webContents.send(IPC.PTY_EXIT, payload)
     })
 
-    return { ptyId: id }
+    return { ptyId: id, pid: manager.pid }
   })
 
   ipcMain.on(IPC.PTY_WRITE, (_event, req: PtyWriteRequest) => {

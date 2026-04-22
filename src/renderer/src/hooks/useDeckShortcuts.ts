@@ -46,11 +46,21 @@ export function useDeckShortcuts(): void {
       useDeckStore.getState().triggerFocusSearch()
     })
 
+    const unsubTogglePanel = window.deck.shortcuts.onTogglePanel(() => {
+      const state = useDeckStore.getState()
+      if (state.activeRightPanel !== null) {
+        state.toggleRightPanel(state.activeRightPanel)
+      } else {
+        state.toggleRightPanel(state.lastActiveRightPanel)
+      }
+    })
+
     return () => {
       unsubNew()
       unsubStop()
       unsubSwitch()
       unsubFocus()
+      unsubTogglePanel()
     }
   }, [])
 }

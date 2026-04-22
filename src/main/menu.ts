@@ -56,6 +56,11 @@ export function buildApplicationMenu(mainWindow: BrowserWindow): Menu {
           accelerator: 'CmdOrCtrl+F',
           click: () => send(IPC.SHORTCUT_FOCUS_SEARCH)
         },
+        {
+          label: 'Toggle Panel',
+          accelerator: 'CmdOrCtrl+\\',
+          click: () => send(IPC.SHORTCUT_TOGGLE_PANEL)
+        },
         { type: 'separator' },
         { role: 'reload' },
         { role: 'forceReload' },

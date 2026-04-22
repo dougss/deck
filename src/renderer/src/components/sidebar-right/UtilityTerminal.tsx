@@ -3,30 +3,24 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
-import type { PtyId, SessionId } from '../../../../shared/ipc'
+import type { PtyId } from '../../../../shared/ipc'
+import { useDeckStore } from '@/stores/deck'
 
-// NOTE: Task 10 migration from Phase 1 Terminal.tsx.
-// Phase 1 model: xterm spawns its own PTY via pty.spawn, owns kill on unmount.
-// Phase 2 model: xterm attaches to an externally-managed ptyId; lifecycle
-// (spawn/kill) belongs to SessionManager via session.attach/detach.
-// Preserved from Phase 1: xterm theme, font stack, FitAddon + WebLinks addons,
-// ResizeObserver debounce (100ms), cursorBlink, allowProposedApi.
-// Intentionally removed: internal pty.spawn, pty.kill on unmount.
-
-interface SessionTerminalProps {
-  sessionId: SessionId
-  ptyId: PtyId
+interface UtilityTerminalProps {
+  cwd: string
   visible: boolean
+  onPidChange?: (pid: number | null) => void
 }
 
-export function SessionTerminal({
-  sessionId,
-  ptyId,
-  visible
-}: SessionTerminalProps): React.JSX.Element {
+export function UtilityTerminal({
+  cwd,
+  visible,
+  onPidChange
+}: UtilityTerminalProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const termRef = useRef<XTerm | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
+  const ptyIdRef = useRef<PtyId | null>(null)
   const visibleRef = useRef(visible)
   visibleRef.current = visible
 
@@ -52,27 +46,13 @@ export function SessionTerminal({
     const fit = new FitAddon()
     term.loadAddon(fit)
     term.loadAddon(new WebLinksAddon())
-
     term.open(container)
     termRef.current = term
     fitRef.current = fit
 
     if (visibleRef.current) {
       fit.fit()
-      window.deck.pty.resize(ptyId, term.cols, term.rows)
     }
-
-    const inputDisposable = term.onData((data) => {
-      window.deck.pty.write(ptyId, data)
-    })
-
-    const unsubData = window.deck.pty.onData(ptyId, (chunk) => {
-      term.write(chunk)
-    })
-
-    const unsubExit = window.deck.pty.onExit(ptyId, (info) => {
-      term.write(`\r\n\x1b[90m[pty exited: code=${info.exitCode}]\x1b[0m\r\n`)
-    })
 
     let resizeTimer: ReturnType<typeof setTimeout> | null = null
     const observer = new ResizeObserver(() => {
@@ -81,44 +61,96 @@ export function SessionTerminal({
       resizeTimer = setTimeout(() => {
         const t = termRef.current
         const f = fitRef.current
-        if (!t || !f) return
+        const ptyId = ptyIdRef.current
+        if (!t || !f || !ptyId) return
         f.fit()
         window.deck.pty.resize(ptyId, t.cols, t.rows)
       }, 100)
     })
     observer.observe(container)
 
+    let cleanedUp = false
+    let unsubData: (() => void) | null = null
+    let unsubExit: (() => void) | null = null
+
+    window.deck.pty
+      .spawn({
+        cwd,
+        shell: window.deck.env.shell,
+        cols: term.cols,
+        rows: term.rows
+      })
+      .then(({ ptyId, pid }) => {
+        if (cleanedUp) {
+          window.deck.pty.kill(ptyId)
+          return
+        }
+
+        ptyIdRef.current = ptyId
+        onPidChange?.(pid ?? null)
+
+        term.onData((data) => window.deck.pty.write(ptyId, data))
+
+        unsubData = window.deck.pty.onData(ptyId, (chunk) => {
+          term.write(chunk)
+        })
+
+        unsubExit = window.deck.pty.onExit(ptyId, (info) => {
+          term.write(`\r\n\x1b[90m[pty exited: code=${info.exitCode}]\x1b[0m\r\n`)
+          onPidChange?.(null)
+        })
+      })
+      .catch((err) => {
+        console.error('[UtilityTerminal] spawn failed:', err)
+      })
+
     return () => {
+      cleanedUp = true
       if (resizeTimer) clearTimeout(resizeTimer)
       observer.disconnect()
-      inputDisposable.dispose()
-      unsubData()
-      unsubExit()
+      unsubData?.()
+      unsubExit?.()
+      if (ptyIdRef.current) {
+        window.deck.pty.kill(ptyIdRef.current)
+        ptyIdRef.current = null
+      }
       term.dispose()
       termRef.current = null
       fitRef.current = null
     }
-  }, [ptyId])
+  }, [])
 
   useLayoutEffect(() => {
     if (!visible) return
     const raf = requestAnimationFrame(() => {
       const term = termRef.current
       const fit = fitRef.current
+      const ptyId = ptyIdRef.current
       if (!term || !fit) return
       fit.fit()
-      window.deck.pty.resize(ptyId, term.cols, term.rows)
+      if (ptyId) window.deck.pty.resize(ptyId, term.cols, term.rows)
       term.focus()
     })
     return () => cancelAnimationFrame(raf)
-  }, [visible, ptyId])
+  }, [visible])
 
   return (
     <div
       ref={containerRef}
-      data-session-id={sessionId}
       className="absolute inset-0"
       style={{ display: visible ? 'block' : 'none' }}
     />
   )
+}
+
+export function useUtilityCwd(): string {
+  return useDeckStore((s) => {
+    const activeSession = s.activeSessionId
+      ? s.sessions.find((x) => x.id === s.activeSessionId)
+      : null
+    const workspace = activeSession
+      ? s.workspaces.find((w) => w.id === activeSession.workspaceId)
+      : null
+    return workspace?.path ?? ''
+  })
 }

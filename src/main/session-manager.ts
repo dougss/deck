@@ -26,6 +26,7 @@ interface SessionRow {
   command: string
   sub_text: string
   status: string
+  kind: string
   created_at: number
   last_active_at: number
 }
@@ -103,6 +104,7 @@ export class SessionManager extends EventEmitter<EventMap> {
       command: row.command,
       subText: row.sub_text,
       status: toStatus(row.status),
+      kind: (row.kind === 'planner' ? 'planner' : 'executor') as Session['kind'],
       createdAt: row.created_at,
       lastActiveAt: row.last_active_at,
       ptyId: record?.ptyId ?? null,
@@ -138,16 +140,17 @@ export class SessionManager extends EventEmitter<EventMap> {
       .get(req.workspaceId)
     if (!workspaceRow) throw new Error(`Workspace not found: ${req.workspaceId}`)
 
+    const kind = req.kind ?? 'executor'
     const id = randomUUID()
     const now = Date.now()
 
     this.db
       .prepare(
         `INSERT INTO sessions
-          (id, workspace_id, name, cwd, command, sub_text, status, created_at, last_active_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'idle', ?, ?)`
+          (id, workspace_id, name, cwd, command, sub_text, status, kind, created_at, last_active_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'idle', ?, ?, ?)`
       )
-      .run(id, req.workspaceId, name, cwd, command, subText, now, now)
+      .run(id, req.workspaceId, name, cwd, command, subText, kind, now, now)
 
     const session = this.get(id)!
     this.emit('updated', { type: 'created', session })

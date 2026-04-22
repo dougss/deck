@@ -61,7 +61,8 @@ ipcRenderer.on(IPC.SESSION_UPDATED, (_event, event: SessionUpdateEvent) => {
 
 const deck: DeckApi = {
   env: {
-    home: homedir()
+    home: homedir(),
+    shell: process.env.SHELL ?? '/bin/zsh'
   },
   pty: {
     spawn(req: PtySpawnRequest): Promise<PtySpawnResponse> {
@@ -185,6 +186,11 @@ const deck: DeckApi = {
       const listener = (): void => cb()
       ipcRenderer.on(IPC.SHORTCUT_FOCUS_SEARCH, listener)
       return () => ipcRenderer.removeListener(IPC.SHORTCUT_FOCUS_SEARCH, listener)
+    },
+    onTogglePanel(cb) {
+      const listener = (): void => cb()
+      ipcRenderer.on(IPC.SHORTCUT_TOGGLE_PANEL, listener)
+      return () => ipcRenderer.removeListener(IPC.SHORTCUT_TOGGLE_PANEL, listener)
     }
   } satisfies DeckShortcutsApi,
   settings: {

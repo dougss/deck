@@ -30,6 +30,7 @@ export const IPC = {
   SHORTCUT_STOP_SESSION: 'shortcut:stop-session',
   SHORTCUT_SWITCH_SESSION: 'shortcut:switch-session',
   SHORTCUT_FOCUS_SEARCH: 'shortcut:focus-search',
+  SHORTCUT_TOGGLE_PANEL: 'shortcut:toggle-panel',
   SETTINGS_GET: 'settings:get',
   SETTINGS_SET: 'settings:set',
   SYSTEM_OPEN_IN_EDITOR: 'system:open-in-editor'
@@ -46,6 +47,7 @@ export interface PtySpawnRequest {
 
 export interface PtySpawnResponse {
   ptyId: PtyId
+  pid?: number | null
 }
 
 export interface PtyWriteRequest {
@@ -85,6 +87,7 @@ export interface DeckPtyApi {
 
 export interface DeckEnv {
   home: string
+  shell: string
 }
 
 export interface Workspace {
@@ -146,6 +149,7 @@ export interface Session {
   command: string
   subText: string
   status: SessionStatus
+  kind: 'executor' | 'planner'
   createdAt: number
   lastActiveAt: number
   ptyId: PtyId | null
@@ -158,6 +162,7 @@ export interface SessionCreateRequest {
   cwd: string
   command: string
   subText?: string
+  kind?: 'executor' | 'planner'
 }
 
 export type SessionPatch = Partial<Pick<Session, 'name' | 'cwd' | 'command' | 'subText'>>
@@ -214,6 +219,7 @@ export interface DeckShortcutsApi {
   onStopSession(cb: () => void): () => void
   onSwitchSession(cb: (n: number) => void): () => void
   onFocusSearch(cb: () => void): () => void
+  onTogglePanel(cb: () => void): () => void
 }
 
 export type EditorPreset = 'zed' | 'cursor' | 'vscode' | 'custom'

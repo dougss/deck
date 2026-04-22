@@ -12,6 +12,8 @@ import type {
 
 type ExpandedMap = Record<WorkspaceId, true | undefined>
 
+type RightPanelMode = 'planner' | 'terminal'
+
 interface DeckState {
   workspaces: Workspace[]
   sessions: Session[]
@@ -26,6 +28,10 @@ interface DeckState {
   newSessionDialogWorkspaceId: WorkspaceId | null
   focusSearchTick: number
 
+  activeRightPanel: RightPanelMode | null
+  lastActiveRightPanel: RightPanelMode
+  rightPanelPinned: boolean
+
   hydrate: () => Promise<void>
   subscribe: () => () => void
 
@@ -35,6 +41,8 @@ interface DeckState {
   openNewSessionDialog: (workspaceId: WorkspaceId) => void
   closeNewSessionDialog: () => void
   triggerFocusSearch: () => void
+  toggleRightPanel: (mode: RightPanelMode) => void
+  setRightPanelPinned: (pinned: boolean) => void
 }
 
 const sortWorkspaces = (ws: Workspace[]): Workspace[] =>
@@ -63,6 +71,10 @@ export const useDeckStore = create<DeckState>()(
       hydrationError: null,
       newSessionDialogWorkspaceId: null,
       focusSearchTick: 0,
+
+      activeRightPanel: null,
+      lastActiveRightPanel: 'terminal' as RightPanelMode,
+      rightPanelPinned: false,
 
       hydrate: async () => {
         try {
@@ -182,7 +194,22 @@ export const useDeckStore = create<DeckState>()(
           (state) => ({ focusSearchTick: state.focusSearchTick + 1 }),
           false,
           'ui/triggerFocusSearch'
-        )
+        ),
+
+      toggleRightPanel: (mode) =>
+        set(
+          (state) => {
+            if (state.activeRightPanel === mode) {
+              return { activeRightPanel: null }
+            }
+            return { activeRightPanel: mode, lastActiveRightPanel: mode }
+          },
+          false,
+          'ui/toggleRightPanel'
+        ),
+
+      setRightPanelPinned: (pinned) =>
+        set({ rightPanelPinned: pinned }, false, 'ui/setRightPanelPinned')
     }),
     { name: 'deck', enabled: import.meta.env.DEV }
   )
@@ -202,8 +229,13 @@ export const useActiveSession = (): Session | null =>
 export const useIsWorkspaceExpanded = (id: WorkspaceId): boolean =>
   useDeckStore((s) => !!s.expandedWorkspaceIds[id])
 
-export const useSessionsByWorkspace = (wsId: WorkspaceId): Session[] =>
-  useDeckStore(useShallow((s) => s.sessions.filter((sess) => sess.workspaceId === wsId)))
+export const useSessionsByWorkspace = (
+  wsId: WorkspaceId,
+  kind: 'executor' | 'planner' = 'executor'
+): Session[] =>
+  useDeckStore(
+    useShallow((s) => s.sessions.filter((sess) => sess.workspaceId === wsId && sess.kind === kind))
+  )
 
 export const useActiveWorkspace = (): Workspace | null =>
   useDeckStore((s) => {

@@ -12,6 +12,12 @@ const migrations: Migration[] = [
     up: (db): void => {
       db.exec(schemaSql)
     }
+  },
+  {
+    version: 2,
+    up: (db): void => {
+      db.exec(`ALTER TABLE sessions ADD COLUMN kind TEXT NOT NULL DEFAULT 'executor'`)
+    }
   }
 ]
 
