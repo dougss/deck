@@ -101,6 +101,7 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
                   <option value="zed">Zed</option>
                   <option value="cursor">Cursor</option>
                   <option value="vscode">VS Code</option>
+                  <option value="fork">Fork</option>
                   <option value="custom">Custom…</option>
                 </select>
                 <ChevronDown

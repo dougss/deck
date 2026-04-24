@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Zap, MousePointer2, Code2, Terminal } from 'lucide-react'
+import { Zap, MousePointer2, Code2, GitBranch, Terminal } from 'lucide-react'
 import type { EditorPreset } from '../../../../shared/ipc'
 import {
   Dialog,
@@ -22,6 +22,7 @@ const EDITORS: EditorCard[] = [
   { id: 'zed', label: 'Zed', description: 'Fast, collaborative editor', Icon: Zap },
   { id: 'cursor', label: 'Cursor', description: 'AI-first code editor', Icon: MousePointer2 },
   { id: 'vscode', label: 'VS Code', description: 'Popular open-source editor', Icon: Code2 },
+  { id: 'fork', label: 'Fork', description: 'Git client with diff view', Icon: GitBranch },
   { id: 'custom', label: 'Custom', description: 'Use your own command', Icon: Terminal }
 ]
 
@@ -82,9 +83,11 @@ export function EditorPreferenceDialog({
         ? 'Open in Cursor'
         : selected === 'vscode'
           ? 'Open in VS Code'
-          : selected === 'custom'
-            ? 'Open in Editor'
-            : 'Open'
+          : selected === 'fork'
+            ? 'Open in Fork'
+            : selected === 'custom'
+              ? 'Open in Editor'
+              : 'Open'
 
   return (
     <Dialog

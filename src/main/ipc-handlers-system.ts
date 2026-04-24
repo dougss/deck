@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, shell } from 'electron'
 import { spawn } from 'node:child_process'
 import { IPC } from '../shared/ipc'
 import type { OpenInEditorRequest } from '../shared/ipc'
@@ -11,6 +11,10 @@ const PRESET_BINS: Record<'zed' | 'cursor' | 'vscode', string> = {
 }
 
 export function registerSystemHandlers(): void {
+  ipcMain.handle(IPC.SYSTEM_OPEN_EXTERNAL, (_event, url: string): Promise<void> => {
+    return shell.openExternal(url)
+  })
+
   ipcMain.handle(IPC.SYSTEM_OPEN_IN_EDITOR, (_event, req: OpenInEditorRequest): void => {
     const { preferredEditor, customEditorCommand } = getSettings()
     if (!preferredEditor) return
@@ -26,8 +30,10 @@ export function registerSystemHandlers(): void {
         return
       }
       command = `${customEditorCommand} "${escapedPath}"`
+    } else if (preferredEditor === 'fork') {
+      command = `open -a Fork "${escapedPath}"`
     } else {
-      const bin = PRESET_BINS[preferredEditor]
+      const bin = PRESET_BINS[preferredEditor as 'zed' | 'cursor' | 'vscode']
       command = `${bin} "${escapedPath}"`
     }
 

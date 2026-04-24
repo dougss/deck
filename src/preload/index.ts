@@ -204,6 +204,9 @@ const deck: DeckApi = {
   system: {
     openInEditor(req: { workspacePath: string }): Promise<void> {
       return ipcRenderer.invoke(IPC.SYSTEM_OPEN_IN_EDITOR, req)
+    },
+    openExternal(url: string): Promise<void> {
+      return ipcRenderer.invoke(IPC.SYSTEM_OPEN_EXTERNAL, url)
     }
   } satisfies DeckSystemApi
 }

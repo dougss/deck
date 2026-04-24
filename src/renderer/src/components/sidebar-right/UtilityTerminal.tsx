@@ -45,10 +45,26 @@ export function UtilityTerminal({
 
     const fit = new FitAddon()
     term.loadAddon(fit)
-    term.loadAddon(new WebLinksAddon())
+    term.loadAddon(new WebLinksAddon((_, url) => window.deck.system.openExternal(url)))
     term.open(container)
     termRef.current = term
     fitRef.current = fit
+
+    term.attachCustomKeyEventHandler((e: KeyboardEvent) => {
+      if (
+        e.type === 'keydown' &&
+        e.key === 'Enter' &&
+        e.shiftKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.metaKey
+      ) {
+        const ptyId = ptyIdRef.current
+        if (ptyId) window.deck.pty.write(ptyId, '\n')
+        return false
+      }
+      return true
+    })
 
     if (visibleRef.current) {
       fit.fit()
@@ -136,10 +152,11 @@ export function UtilityTerminal({
 
   return (
     <div
-      ref={containerRef}
       className="absolute inset-0"
-      style={{ display: visible ? 'block' : 'none' }}
-    />
+      style={{ display: visible ? 'block' : 'none', padding: '20px 22px' }}
+    >
+      <div ref={containerRef} className="h-full w-full" />
+    </div>
   )
 }
 

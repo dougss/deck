@@ -33,7 +33,8 @@ export const IPC = {
   SHORTCUT_TOGGLE_PANEL: 'shortcut:toggle-panel',
   SETTINGS_GET: 'settings:get',
   SETTINGS_SET: 'settings:set',
-  SYSTEM_OPEN_IN_EDITOR: 'system:open-in-editor'
+  SYSTEM_OPEN_IN_EDITOR: 'system:open-in-editor',
+  SYSTEM_OPEN_EXTERNAL: 'system:open-external'
 } as const
 
 export interface PtySpawnRequest {
@@ -222,7 +223,7 @@ export interface DeckShortcutsApi {
   onTogglePanel(cb: () => void): () => void
 }
 
-export type EditorPreset = 'zed' | 'cursor' | 'vscode' | 'custom'
+export type EditorPreset = 'zed' | 'cursor' | 'vscode' | 'fork' | 'custom'
 
 export interface DeckSettings {
   preferredEditor: EditorPreset | null
@@ -241,6 +242,7 @@ export interface DeckSettingsApi {
 
 export interface DeckSystemApi {
   openInEditor(req: OpenInEditorRequest): Promise<void>
+  openExternal(url: string): Promise<void>
 }
 
 export interface DeckApi {
