@@ -4,6 +4,7 @@ import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import type { PtyId, SessionId } from '../../../../shared/ipc'
+import { handleMacOSKey } from '@/lib/macos-terminal-keys'
 
 // NOTE: Task 10 migration from Phase 1 Terminal.tsx.
 // Phase 1 model: xterm spawns its own PTY via pty.spawn, owns kill on unmount.
@@ -57,26 +58,9 @@ export function SessionTerminal({
     termRef.current = term
     fitRef.current = fit
 
-    term.attachCustomKeyEventHandler((e: KeyboardEvent) => {
-      if (e.type !== 'keydown') return true
-      // Shift+Enter: insert newline without submitting (Meta+Enter / ESC+CR)
-      if (e.key === 'Enter' && e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        window.deck.pty.write(ptyId, '\x1b\r')
-        return false
-      }
-      // Cmd+Left/Right: beginning/end of line (Ctrl+A / Ctrl+E)
-      if (e.metaKey && !e.shiftKey && !e.ctrlKey && !e.altKey) {
-        if (e.key === 'ArrowLeft') {
-          window.deck.pty.write(ptyId, '\x01')
-          return false
-        }
-        if (e.key === 'ArrowRight') {
-          window.deck.pty.write(ptyId, '\x05')
-          return false
-        }
-      }
-      return true
-    })
+    term.attachCustomKeyEventHandler((e: KeyboardEvent) =>
+      handleMacOSKey(e, (data) => window.deck.pty.write(ptyId, data))
+    )
 
     if (visibleRef.current) {
       fit.fit()

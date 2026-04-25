@@ -58,3 +58,11 @@ Raw observations during real use. Input for future task prioritization.
   - Friction: colava 2x — double handler (Edit menu role + attachCustomKeyEventHandler)
   - Severity: blocker
   - Status: ✅ fixed in v0.3.0-beta.2 (T2 amend)
+
+- **2026-04-22 09:44** — Homepage com atalhos (algo informativo interessante) - Sem prioridade
+- **2026-04-22 09:47** — Git DIFF - visualizar o diff dos arquivos alterados
+- **2026-04-22 20:24** — Padding X no main - no layout tem um padding no bloco central que esta sem
+- **2026-04-22 20:25** — CMD + key não funciona - Não esta funcionando outras combinações de teclas CMD -> (entre outros) SHIFT + ENTER
+- **2026-04-22 21:17** — Integração com hooks do CC para notificar quando atualizações finalizaram (mult-projetos)
+- **2026-04-23 06:13** — Não consigo abrir links apresentados no Chat com Cmd + click
+- **2026-04-24 09:00** — Projetos DENTRO da pasta Leve_saude não estão injetando o .env, só injeta corretamente se iniciar o claude na raiz. Quero que funcione em qualquer diretório DENTRO da pasta Leve_saude.

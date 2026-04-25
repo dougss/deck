@@ -5,6 +5,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import type { PtyId } from '../../../../shared/ipc'
 import { useDeckStore } from '@/stores/deck'
+import { handleMacOSKey } from '@/lib/macos-terminal-keys'
 
 interface UtilityTerminalProps {
   cwd: string
@@ -50,26 +51,12 @@ export function UtilityTerminal({
     termRef.current = term
     fitRef.current = fit
 
-    term.attachCustomKeyEventHandler((e: KeyboardEvent) => {
-      if (e.type !== 'keydown') return true
-      if (e.key === 'Enter' && e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    term.attachCustomKeyEventHandler((e: KeyboardEvent) =>
+      handleMacOSKey(e, (data) => {
         const ptyId = ptyIdRef.current
-        if (ptyId) window.deck.pty.write(ptyId, '\x1b\r')
-        return false
-      }
-      if (e.metaKey && !e.shiftKey && !e.ctrlKey && !e.altKey) {
-        const ptyId = ptyIdRef.current
-        if (e.key === 'ArrowLeft') {
-          if (ptyId) window.deck.pty.write(ptyId, '\x01')
-          return false
-        }
-        if (e.key === 'ArrowRight') {
-          if (ptyId) window.deck.pty.write(ptyId, '\x05')
-          return false
-        }
-      }
-      return true
-    })
+        if (ptyId) window.deck.pty.write(ptyId, data)
+      })
+    )
 
     if (visibleRef.current) {
       fit.fit()
