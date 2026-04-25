@@ -60,7 +60,7 @@ export function UtilityTerminal({
         !e.metaKey
       ) {
         const ptyId = ptyIdRef.current
-        if (ptyId) window.deck.pty.write(ptyId, '\n')
+        if (ptyId) window.deck.pty.write(ptyId, '\x1b[13;2u')
         return false
       }
       return true
@@ -152,11 +152,16 @@ export function UtilityTerminal({
 
   return (
     <div
-      className="absolute inset-0"
-      style={{ display: visible ? 'block' : 'none', padding: '20px 22px' }}
-    >
-      <div ref={containerRef} className="h-full w-full" />
-    </div>
+      ref={containerRef}
+      style={{
+        position: 'absolute',
+        top: '20px',
+        right: '22px',
+        bottom: '20px',
+        left: '22px',
+        display: visible ? 'block' : 'none'
+      }}
+    />
   )
 }
 
