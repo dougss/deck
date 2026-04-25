@@ -47,7 +47,7 @@ export function RightPanel(): React.JSX.Element {
 
   return (
     <div
-      className="absolute top-0 bottom-0 right-12 w-[420px] bg-op-surface-1 border-l border-op-border flex flex-col z-10"
+      className="absolute top-0 bottom-8 right-12 w-[420px] bg-op-surface border-l border-op-border flex flex-col z-10"
       style={{
         display: isPanelOpen ? 'flex' : 'none',
         boxShadow: isOverlay
@@ -91,7 +91,7 @@ export function RightPanel(): React.JSX.Element {
       </div>
 
       {activePanel === 'terminal' && (
-        <div className="px-3 py-[7px] border-t border-op-border-soft flex items-center justify-between font-mono text-[10.5px] text-op-zinc-500 shrink-0">
+        <div className="px-3 py-[7px] border-t border-op-border-dim flex items-center justify-between font-mono text-[10.5px] text-op-zinc-500 shrink-0">
           <span>
             {shellName(window.deck.env.shell)}
             {pid !== null ? ` · pid ${pid}` : ''}

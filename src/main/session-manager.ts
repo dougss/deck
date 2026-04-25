@@ -215,12 +215,14 @@ export class SessionManager extends EventEmitter<EventMap> {
     const cols = opts?.cols ?? ATTACH_DEFAULT_COLS
     const rows = opts?.rows ?? ATTACH_DEFAULT_ROWS
 
+    const direnvPrefix =
+      'eval "$(command -v direnv >/dev/null 2>&1 && direnv export zsh 2>/dev/null)";'
     const { id: ptyId, manager } = this.ptyRegistry.create({
       cwd: current.cwd,
       cols,
       rows,
       shell: '/bin/zsh',
-      args: ['-ilc', current.command]
+      args: ['-ilc', `${direnvPrefix} ${current.command}`]
     })
 
     const now = Date.now()
