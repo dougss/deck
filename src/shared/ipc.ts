@@ -2,6 +2,7 @@ export type PtyId = string
 export type WorkspaceId = string
 export type SessionId = string
 export type SessionStatus = 'idle' | 'working'
+export type NotificationState = 'idle' | 'pending' | 'error'
 
 export const IPC = {
   PTY_SPAWN: 'pty:spawn',
@@ -34,7 +35,11 @@ export const IPC = {
   SETTINGS_GET: 'settings:get',
   SETTINGS_SET: 'settings:set',
   SYSTEM_OPEN_IN_EDITOR: 'system:open-in-editor',
-  SYSTEM_OPEN_EXTERNAL: 'system:open-external'
+  SYSTEM_OPEN_EXTERNAL: 'system:open-external',
+  HOOK_EVENT_RECEIVED: 'hooks:event-received',
+  HOOKS_GET_STATUS: 'hooks:get-status',
+  HOOKS_INSTALL: 'hooks:install',
+  HOOKS_UNINSTALL: 'hooks:uninstall'
 } as const
 
 export interface PtySpawnRequest {
@@ -245,6 +250,26 @@ export interface DeckSystemApi {
   openExternal(url: string): Promise<void>
 }
 
+export interface HookEventPayload {
+  sessionId: SessionId
+  notificationState: NotificationState
+}
+
+export type HookInstallStatus = 'installed' | 'not-installed' | 'partial' | 'not-found'
+
+export interface HookInstanceStatus {
+  path: string
+  status: HookInstallStatus
+  detail: string
+}
+
+export interface DeckHooksApi {
+  getStatus(): Promise<HookInstanceStatus[]>
+  install(instancePaths?: string[]): Promise<HookInstanceStatus[]>
+  uninstall(instancePaths?: string[]): Promise<HookInstanceStatus[]>
+  onEvent(cb: (payload: HookEventPayload) => void): () => void
+}
+
 export interface DeckApi {
   env: DeckEnv
   pty: DeckPtyApi
@@ -254,4 +279,5 @@ export interface DeckApi {
   shortcuts: DeckShortcutsApi
   settings: DeckSettingsApi
   system: DeckSystemApi
+  hooks: DeckHooksApi
 }

@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react'
 import { StatusDot, type StatusDotVariant } from '@/components/ui/StatusDot'
 import { formatRelativeTime } from '@/lib/time'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
+import { useDeckStore } from '@/stores/deck'
 import type { Session } from '../../../../shared/ipc'
 import { SessionContextMenu } from './SessionContextMenu'
 
@@ -20,7 +21,16 @@ export function SessionItem({
   onStop,
   onDelete
 }: SessionItemProps): React.JSX.Element {
-  const dotVariant: StatusDotVariant = session.status === 'working' ? 'working' : 'idle'
+  const notificationState = useDeckStore((s) => s.notificationStates[session.id] ?? 'idle')
+
+  let dotVariant: StatusDotVariant
+  if (!isActive && notificationState === 'pending') {
+    dotVariant = 'pending'
+  } else if (!isActive && notificationState === 'error') {
+    dotVariant = 'error'
+  } else {
+    dotVariant = session.status === 'working' ? 'working' : 'idle'
+  }
 
   const nameEdit = useInlineEdit(session.name)
   const subTextEdit = useInlineEdit(session.subText)

@@ -7,10 +7,12 @@ import type {
   SessionUpdateEvent,
   Workspace,
   WorkspaceId,
-  WorkspaceUpdateEvent
+  WorkspaceUpdateEvent,
+  NotificationState
 } from '../../../shared/ipc'
 
 type ExpandedMap = Record<WorkspaceId, true | undefined>
+type NotificationMap = Record<SessionId, NotificationState>
 
 type RightPanelMode = 'planner' | 'terminal'
 
@@ -32,6 +34,8 @@ interface DeckState {
   lastActiveRightPanel: RightPanelMode
   rightPanelPinned: boolean
 
+  notificationStates: NotificationMap
+
   hydrate: () => Promise<void>
   subscribe: () => () => void
 
@@ -43,6 +47,8 @@ interface DeckState {
   triggerFocusSearch: () => void
   toggleRightPanel: (mode: RightPanelMode) => void
   setRightPanelPinned: (pinned: boolean) => void
+  setNotificationState: (sessionId: SessionId, state: NotificationState) => void
+  clearNotificationState: (sessionId: SessionId) => void
 }
 
 const sortWorkspaces = (ws: Workspace[]): Workspace[] =>
@@ -75,6 +81,8 @@ export const useDeckStore = create<DeckState>()(
       activeRightPanel: null,
       lastActiveRightPanel: 'terminal' as RightPanelMode,
       rightPanelPinned: false,
+
+      notificationStates: {},
 
       hydrate: async () => {
         try {
@@ -159,15 +167,43 @@ export const useDeckStore = create<DeckState>()(
           )
         })
 
+        const unsubHooks = window.deck.hooks.onEvent((payload) => {
+          set(
+            (state) => {
+              // Active session is already visible — no dot needed
+              if (payload.sessionId === state.activeSessionId) return state
+              return {
+                notificationStates: {
+                  ...state.notificationStates,
+                  [payload.sessionId]: payload.notificationState
+                }
+              }
+            },
+            false,
+            'hooks/notification'
+          )
+        })
+
         subscribeDispose = () => {
           unsubWs()
           unsubSess()
+          unsubHooks()
           subscribeDispose = null
         }
         return subscribeDispose
       },
 
-      setActive: (id) => set({ activeSessionId: id }, false, 'ui/setActive'),
+      setActive: (id) =>
+        set(
+          (state) => ({
+            activeSessionId: id,
+            notificationStates: id
+              ? { ...state.notificationStates, [id]: 'idle' as const }
+              : state.notificationStates
+          }),
+          false,
+          'ui/setActive'
+        ),
 
       toggleWorkspace: (id) =>
         set(
@@ -209,7 +245,23 @@ export const useDeckStore = create<DeckState>()(
         ),
 
       setRightPanelPinned: (pinned) =>
-        set({ rightPanelPinned: pinned }, false, 'ui/setRightPanelPinned')
+        set({ rightPanelPinned: pinned }, false, 'ui/setRightPanelPinned'),
+
+      setNotificationState: (sessionId, state) =>
+        set(
+          (s) => ({ notificationStates: { ...s.notificationStates, [sessionId]: state } }),
+          false,
+          'hooks/setNotification'
+        ),
+
+      clearNotificationState: (sessionId) =>
+        set(
+          (s) => ({
+            notificationStates: { ...s.notificationStates, [sessionId]: 'idle' as const }
+          }),
+          false,
+          'hooks/clearNotification'
+        )
     }),
     { name: 'deck', enabled: import.meta.env.DEV }
   )

@@ -45,6 +45,7 @@ Raw observations during real use. Input for future task prioritization.
   - Needed: nova linha sem submeter
   - Friction: Shift+Enter submete em vez de inserir \n
   - Severity: medium
+  - ✅ RESOLVED in v0.3.0-beta.3
 
 - **2026-04-22 08:05** — Terminal por session para dev server
   - Context: quero rodar `pnpm dev` em paralelo com o CC
@@ -61,8 +62,34 @@ Raw observations during real use. Input for future task prioritization.
 
 - **2026-04-22 09:44** — Homepage com atalhos (algo informativo interessante) - Sem prioridade
 - **2026-04-22 09:47** — Git DIFF - visualizar o diff dos arquivos alterados
+  - Status: ✅ RESOLVED in v0.3.0-beta.3 — Fork preset adicionado como 5º Open in IDE option
+
 - **2026-04-22 20:24** — Padding X no main - no layout tem um padding no bloco central que esta sem
+  - Status: ✅ RESOLVED in v0.3.0-beta.3 — padding wrapper consistente no xterm
+
 - **2026-04-22 20:25** — CMD + key não funciona - Não esta funcionando outras combinações de teclas CMD -> (entre outros) SHIFT + ENTER
+  - Status: ✅ RESOLVED in v0.3.0-beta.3 — macos-terminal-keys.ts mapeia combos nativos para ANSI readline; Shift+Enter via \x1b\r + bloqueio de keypress event
+
 - **2026-04-22 21:17** — Integração com hooks do CC para notificar quando atualizações finalizaram (mult-projetos)
+  - Status: ✅ RESOLVED via C1 mini hooks (pending build)
+  - Limitação: broadcast por workspace (ver "Limitações conhecidas" abaixo)
+
 - **2026-04-23 06:13** — Não consigo abrir links apresentados no Chat com Cmd + click
+  - Status: ✅ RESOLVED in v0.3.0-beta.3 — WebLinksAddon com custom handler abre no browser padrão
+
 - **2026-04-24 09:00** — Projetos DENTRO da pasta Leve_saude não estão injetando o .env, só injeta corretamente se iniciar o claude na raiz. Quero que funcione em qualquer diretório DENTRO da pasta Leve_saude.
+  - Status: ✅ RESOLVED in v0.3.0-beta.3 — direnv inject no spawn: busca .envrc ancestral; workspaces sem .envrc usam config padrão (zero regression)
+
+## Limitações conhecidas
+
+### Hook broadcast por workspace
+
+Quando CC termina em 1 session do workspace, TODAS as sessions daquele workspace ganham dot pulsante.
+
+Razão: CC hook envia apenas `cwd`, sem identificador de session específica do Deck. Deck faz broadcast para todas sessions cujo `workspace.path` bate com `cwd`.
+
+Workaround: clicar em cada session para "marcar como vista" (dot volta ao estado normal).
+
+Fix futuro (não priorizado): injetar `DECK_SESSION_ID` como env var no PTY spawn; hook lê a var e escreve no `events.log`; match passa a identificar a session específica.
+
+Status: ACCEPTABLE — workaround OK, daily drive vai revelar se vira dor real.

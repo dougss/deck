@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e
+
+INPUT=$(cat)
+
+# Try jq first (faster), fallback to Python3 (always available on macOS)
+if command -v jq >/dev/null 2>&1; then
+  CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
+  EVENT=$(printf '%s' "$INPUT" | jq -r '.hook_event_name // "unknown"')
+else
+  PARSED=$(printf '%s' "$INPUT" | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    print(d.get("cwd", ""))
+    print(d.get("hook_event_name", "unknown"))
+except Exception:
+    pass
+' 2>/dev/null)
+  CWD=$(echo "$PARSED" | sed -n 1p)
+  EVENT=$(echo "$PARSED" | sed -n 2p)
+fi
+
+# Normalize event name to lowercase deck convention
+case "$EVENT" in
+  Stop) EVENT="stop" ;;
+  Notification) EVENT="notification" ;;
+  StopFailure) EVENT="error" ;;
+  *) EVENT=$(echo "$EVENT" | tr '[:upper:]' '[:lower:]') ;;
+esac
+
+if [ -n "$CWD" ] && [ -n "$EVENT" ]; then
+  mkdir -p "$HOME/.deck"
+  echo "$CWD|$EVENT|$(date +%s)" >> "$HOME/.deck/events.log"
+fi
+
+# Always exit 0 — hook must not fail and interrupt CC
+exit 0

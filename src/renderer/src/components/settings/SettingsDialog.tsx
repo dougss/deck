@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
 import type { EditorPreset } from '../../../../shared/ipc'
+import { HookInstallSection } from './HookInstallSection'
 import {
   Dialog,
   DialogContent,
@@ -153,6 +154,9 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
               </p>
             </div>
           </div>
+
+          {/* Notifications section */}
+          <HookInstallSection />
 
           {error && <p className="font-body text-[12px] text-red-400">{error}</p>}
         </div>

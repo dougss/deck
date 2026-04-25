@@ -6,6 +6,9 @@ import {
   type DeckSettings,
   type DeckSettingsApi,
   type DeckSystemApi,
+  type DeckHooksApi,
+  type HookEventPayload,
+  type HookInstanceStatus,
   type PtyDataEvent,
   type PtyExitEvent,
   type PtyId,
@@ -20,11 +23,13 @@ type DataListener = (chunk: string) => void
 type ExitListener = (info: Omit<PtyExitEvent, 'ptyId'>) => void
 type WorkspaceUpdateListener = (event: WorkspaceUpdateEvent) => void
 type SessionUpdateListener = (event: SessionUpdateEvent) => void
+type HookEventListener = (payload: HookEventPayload) => void
 
 const dataListeners = new Map<PtyId, Set<DataListener>>()
 const exitListeners = new Map<PtyId, Set<ExitListener>>()
 const workspaceUpdateListeners = new Set<WorkspaceUpdateListener>()
 const sessionUpdateListeners = new Set<SessionUpdateListener>()
+const hookEventListeners = new Set<HookEventListener>()
 
 ipcRenderer.on(IPC.PTY_DATA, (_event, payload: PtyDataEvent) => {
   const set = dataListeners.get(payload.ptyId)
@@ -55,6 +60,16 @@ ipcRenderer.on(IPC.SESSION_UPDATED, (_event, event: SessionUpdateEvent) => {
       cb(event)
     } catch (err) {
       console.error('[preload] session:updated listener threw:', err)
+    }
+  }
+})
+
+ipcRenderer.on(IPC.HOOK_EVENT_RECEIVED, (_event, payload: HookEventPayload) => {
+  for (const cb of hookEventListeners) {
+    try {
+      cb(payload)
+    } catch (err) {
+      console.error('[preload] hooks:event-received listener threw:', err)
     }
   }
 })
@@ -208,7 +223,24 @@ const deck: DeckApi = {
     openExternal(url: string): Promise<void> {
       return ipcRenderer.invoke(IPC.SYSTEM_OPEN_EXTERNAL, url)
     }
-  } satisfies DeckSystemApi
+  } satisfies DeckSystemApi,
+  hooks: {
+    getStatus(instancePaths?: string[]): Promise<HookInstanceStatus[]> {
+      return ipcRenderer.invoke(IPC.HOOKS_GET_STATUS, instancePaths)
+    },
+    install(instancePaths?: string[]): Promise<HookInstanceStatus[]> {
+      return ipcRenderer.invoke(IPC.HOOKS_INSTALL, instancePaths)
+    },
+    uninstall(instancePaths?: string[]): Promise<HookInstanceStatus[]> {
+      return ipcRenderer.invoke(IPC.HOOKS_UNINSTALL, instancePaths)
+    },
+    onEvent(cb: HookEventListener) {
+      hookEventListeners.add(cb)
+      return () => {
+        hookEventListeners.delete(cb)
+      }
+    }
+  } satisfies DeckHooksApi
 }
 
 if (process.contextIsolated) {

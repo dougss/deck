@@ -42,6 +42,7 @@
   /* Status */
   --success: #4ade80;
   --amber: #fbbf24;
+  --danger: #f87171;
 
   /* Terminal Void canvas — intencionalmente mais escuro que a chrome */
   --tv-void: #080808;
@@ -98,6 +99,7 @@
 
   --color-success: var(--success);
   --color-amber: var(--amber);
+  --color-danger: var(--danger);
 
   --color-tv-void: var(--tv-void);
   --color-tv-void-deep: var(--tv-void-deep);
@@ -121,6 +123,8 @@
 
   /* Animations */
   --animate-pulse-green: pulse-green 1.6s ease-in-out infinite;
+  --animate-pulse-amber: pulse-amber 1.5s ease-in-out infinite;
+  --animate-pulse-red: pulse-red 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse-green {
@@ -130,6 +134,30 @@
   }
   50% {
     box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
+  }
+}
+
+@keyframes pulse-amber {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+  }
+}
+
+@keyframes pulse-red {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(248, 113, 113, 0.5);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 12px rgba(248, 113, 113, 0.8);
   }
 }
 

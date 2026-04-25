@@ -1,4 +1,5 @@
 import { app, shell, BrowserWindow, Menu } from 'electron'
+import { IPC } from '../shared/ipc'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -16,6 +17,9 @@ import { registerDialogHandlers } from './ipc-handlers-dialog'
 import { registerSettingsHandlers } from './ipc-handlers-settings'
 import { registerSystemHandlers } from './ipc-handlers-system'
 import { buildApplicationMenu } from './menu'
+import { EventWatcher, DECK_DIR } from './event-watcher'
+import { registerHookHandlers } from './ipc-handlers-hooks'
+import { mkdirSync } from 'node:fs'
 
 type SmokeKind = 'db' | 'ws' | 'session'
 
@@ -37,6 +41,7 @@ app.setName('Deck')
 app.setPath('userData', join(app.getPath('appData'), 'Deck'))
 
 const ptyRegistry = new PtyRegistry()
+const eventWatcher = new EventWatcher()
 let mainWindow: BrowserWindow | null = null
 let pathCheckInterval: ReturnType<typeof setInterval> | null = null
 
@@ -111,6 +116,41 @@ app.whenReady().then(async () => {
   registerDialogHandlers(() => mainWindow)
   registerSettingsHandlers()
   registerSystemHandlers()
+  registerHookHandlers()
+
+  // Ensure ~/.deck/ exists before starting event watcher
+  mkdirSync(DECK_DIR, { recursive: true, mode: 0o755 })
+
+  // Wire hook events: match cwd to sessions and forward to renderer
+  eventWatcher.on('hookEvent', ({ cwd, event }) => {
+    const win = mainWindow
+    if (!win || win.isDestroyed()) return
+
+    const normalizedCwd = cwd.replace(/\/$/, '').toLowerCase()
+    const matchedWorkspaceIds = workspaceManager
+      .list()
+      .filter((w) => {
+        const wPath = w.path.replace(/\/$/, '').toLowerCase()
+        return wPath === normalizedCwd || normalizedCwd.startsWith(wPath + '/')
+      })
+      .map((w) => w.id)
+
+    if (matchedWorkspaceIds.length === 0) return
+
+    const notificationState = event === 'error' ? 'error' : 'pending'
+    const targetSessions = sessionManager
+      .list()
+      .filter((s) => matchedWorkspaceIds.includes(s.workspaceId))
+
+    for (const session of targetSessions) {
+      win.webContents.send(IPC.HOOK_EVENT_RECEIVED, {
+        sessionId: session.id,
+        notificationState
+      })
+    }
+  })
+
+  eventWatcher.start()
 
   createWindow()
   if (mainWindow) Menu.setApplicationMenu(buildApplicationMenu(mainWindow))
@@ -141,6 +181,7 @@ app.whenReady().then(async () => {
 
 app.on('before-quit', () => {
   if (pathCheckInterval !== null) clearInterval(pathCheckInterval)
+  eventWatcher.stop()
   ptyRegistry.killAll()
 })
 
