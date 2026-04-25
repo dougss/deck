@@ -58,16 +58,22 @@ export function SessionTerminal({
     fitRef.current = fit
 
     term.attachCustomKeyEventHandler((e: KeyboardEvent) => {
-      if (
-        e.type === 'keydown' &&
-        e.key === 'Enter' &&
-        e.shiftKey &&
-        !e.ctrlKey &&
-        !e.altKey &&
-        !e.metaKey
-      ) {
-        window.deck.pty.write(ptyId, '\x1b[13;2u')
+      if (e.type !== 'keydown') return true
+      // Shift+Enter: insert newline without submitting (Meta+Enter / ESC+CR)
+      if (e.key === 'Enter' && e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        window.deck.pty.write(ptyId, '\x1b\r')
         return false
+      }
+      // Cmd+Left/Right: beginning/end of line (Ctrl+A / Ctrl+E)
+      if (e.metaKey && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+        if (e.key === 'ArrowLeft') {
+          window.deck.pty.write(ptyId, '\x01')
+          return false
+        }
+        if (e.key === 'ArrowRight') {
+          window.deck.pty.write(ptyId, '\x05')
+          return false
+        }
       }
       return true
     })
@@ -135,7 +141,7 @@ export function SessionTerminal({
       style={{
         position: 'absolute',
         top: '20px',
-        right: '22px',
+        right: '0',
         bottom: '20px',
         left: '22px',
         display: visible ? 'block' : 'none'

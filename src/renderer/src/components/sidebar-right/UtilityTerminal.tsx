@@ -51,17 +51,22 @@ export function UtilityTerminal({
     fitRef.current = fit
 
     term.attachCustomKeyEventHandler((e: KeyboardEvent) => {
-      if (
-        e.type === 'keydown' &&
-        e.key === 'Enter' &&
-        e.shiftKey &&
-        !e.ctrlKey &&
-        !e.altKey &&
-        !e.metaKey
-      ) {
+      if (e.type !== 'keydown') return true
+      if (e.key === 'Enter' && e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
         const ptyId = ptyIdRef.current
-        if (ptyId) window.deck.pty.write(ptyId, '\x1b[13;2u')
+        if (ptyId) window.deck.pty.write(ptyId, '\x1b\r')
         return false
+      }
+      if (e.metaKey && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+        const ptyId = ptyIdRef.current
+        if (e.key === 'ArrowLeft') {
+          if (ptyId) window.deck.pty.write(ptyId, '\x01')
+          return false
+        }
+        if (e.key === 'ArrowRight') {
+          if (ptyId) window.deck.pty.write(ptyId, '\x05')
+          return false
+        }
       }
       return true
     })
@@ -156,7 +161,7 @@ export function UtilityTerminal({
       style={{
         position: 'absolute',
         top: '20px',
-        right: '22px',
+        right: '0',
         bottom: '20px',
         left: '22px',
         display: visible ? 'block' : 'none'
