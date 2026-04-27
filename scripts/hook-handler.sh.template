@@ -29,9 +29,11 @@ case "$EVENT" in
   *) EVENT=$(echo "$EVENT" | tr '[:upper:]' '[:lower:]') ;;
 esac
 
+SESSION_ID="${DECK_SESSION_ID:-}"
+
 if [ -n "$CWD" ] && [ -n "$EVENT" ]; then
   mkdir -p "$HOME/.deck"
-  echo "$CWD|$EVENT|$(date +%s)" >> "$HOME/.deck/events.log"
+  printf '%s|%s|%d|%s\n' "$CWD" "$EVENT" "$(date +%s)" "$SESSION_ID" >> "$HOME/.deck/events.log"
 fi
 
 # Always exit 0 — hook must not fail and interrupt CC

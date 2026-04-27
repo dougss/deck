@@ -121,10 +121,24 @@ app.whenReady().then(async () => {
   // Ensure ~/.deck/ exists before starting event watcher
   mkdirSync(DECK_DIR, { recursive: true, mode: 0o755 })
 
-  // Wire hook events: match cwd to sessions and forward to renderer
-  eventWatcher.on('hookEvent', ({ cwd, event }) => {
+  // Wire hook events: match session and forward to renderer.
+  // Priority: exact session ID match (via DECK_SESSION_ID env var injected at PTY spawn).
+  // Fallback: cwd-broadcast to all sessions in the matching workspace (back-compat with
+  // old hook-handler or sessions spawned before the DECK_SESSION_ID injection).
+  eventWatcher.on('hookEvent', ({ cwd, event, sessionId }) => {
     const win = mainWindow
     if (!win || win.isDestroyed()) return
+
+    const notificationState = event === 'error' ? 'error' : 'pending'
+
+    if (sessionId) {
+      const session = sessionManager.get(sessionId)
+      if (session) {
+        win.webContents.send(IPC.HOOK_EVENT_RECEIVED, { sessionId: session.id, notificationState })
+        return
+      }
+      // Session not found (deleted while running?) — fall through to cwd-broadcast
+    }
 
     const normalizedCwd = cwd.replace(/\/$/, '').toLowerCase()
     const matchedWorkspaceIds = workspaceManager
@@ -137,16 +151,12 @@ app.whenReady().then(async () => {
 
     if (matchedWorkspaceIds.length === 0) return
 
-    const notificationState = event === 'error' ? 'error' : 'pending'
     const targetSessions = sessionManager
       .list()
       .filter((s) => matchedWorkspaceIds.includes(s.workspaceId))
 
     for (const session of targetSessions) {
-      win.webContents.send(IPC.HOOK_EVENT_RECEIVED, {
-        sessionId: session.id,
-        notificationState
-      })
+      win.webContents.send(IPC.HOOK_EVENT_RECEIVED, { sessionId: session.id, notificationState })
     }
   })
 

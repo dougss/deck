@@ -222,7 +222,8 @@ export class SessionManager extends EventEmitter<EventMap> {
       cols,
       rows,
       shell: '/bin/zsh',
-      args: ['-ilc', `${direnvPrefix} ${current.command}`]
+      args: ['-ilc', `${direnvPrefix} ${current.command}`],
+      env: { DECK_SESSION_ID: id }
     })
 
     const now = Date.now()

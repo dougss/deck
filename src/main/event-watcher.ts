@@ -15,6 +15,7 @@ export interface HookEvent {
   cwd: string
   event: HookEventType
   timestamp: number
+  sessionId: string | null
 }
 
 type EventMap = {
@@ -108,7 +109,11 @@ export class EventWatcher extends EventEmitter<EventMap> {
     const validEvents = new Set<string>(['stop', 'notification', 'error'])
     if (!validEvents.has(event)) return
 
-    this.emit('hookEvent', { cwd, event: event as HookEventType, timestamp })
+    // 4-col schema (new): cwd|event|timestamp|session_id
+    // 3-col schema (legacy): cwd|event|timestamp  → sessionId = null
+    const sessionId = parts.length >= 4 ? parts[3] || null : null
+
+    this.emit('hookEvent', { cwd, event: event as HookEventType, timestamp, sessionId })
   }
 
   private maybeCapLog(currentBuffer: Buffer): void {
