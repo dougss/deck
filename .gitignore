@@ -10,3 +10,6 @@ out
 
 # Claude Design handoff bundle — canonical copy lives in docs/mockups/
 deck-fase-2-layout/
+
+# Claude Code local config (per-user, not shared)
+.claude/
