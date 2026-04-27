@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Plus } from 'lucide-react'
-import type { Session, Workspace } from '../../../../shared/ipc'
+import type { EditorPreset, Session, Workspace } from '../../../../shared/ipc'
 import {
   useSessionsByWorkspace,
   useIsWorkspaceExpanded,
@@ -14,9 +14,9 @@ import { WorkspaceContextMenu } from './WorkspaceContextMenu'
 
 interface WorkspaceGroupProps {
   workspace: Workspace
-  openInEditorLabel: string
+  customEditorCommand: string | null
   onEdit: (ws: Workspace) => void
-  onOpenInEditor: (ws: Workspace) => void
+  onOpenInEditor: (ws: Workspace, editor: EditorPreset) => void
   onDelete: (ws: Workspace) => void
   onNewSession: (ws: Workspace) => void
   onDeleteSession: (session: Session) => void
@@ -24,7 +24,7 @@ interface WorkspaceGroupProps {
 
 export function WorkspaceGroup({
   workspace,
-  openInEditorLabel,
+  customEditorCommand,
   onEdit,
   onOpenInEditor,
   onDelete,
@@ -62,9 +62,9 @@ export function WorkspaceGroup({
     <div className="px-2 mb-0.5">
       <WorkspaceContextMenu
         workspace={workspace}
-        openInEditorLabel={openInEditorLabel}
+        customEditorCommand={customEditorCommand}
         onEdit={() => onEdit(workspace)}
-        onOpenInEditor={() => onOpenInEditor(workspace)}
+        onOpenInEditor={(editor) => onOpenInEditor(workspace, editor)}
         onDelete={() => onDelete(workspace)}
       >
         <WorkspaceRow

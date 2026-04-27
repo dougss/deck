@@ -16,24 +16,22 @@ export function registerSystemHandlers(): void {
   })
 
   ipcMain.handle(IPC.SYSTEM_OPEN_IN_EDITOR, (_event, req: OpenInEditorRequest): void => {
-    const { preferredEditor, customEditorCommand } = getSettings()
-    if (!preferredEditor) return
-
+    const escapedPath = req.workspacePath.replace(/"/g, '\\"')
     let command: string
 
-    const escapedPath = req.workspacePath.replace(/"/g, '\\"')
-
-    if (preferredEditor === 'custom') {
+    if (req.editor === 'custom') {
+      const { customEditorCommand } = getSettings()
       if (!customEditorCommand) return
       if (/[;&|$><`]/.test(customEditorCommand)) {
         console.error('[system] openInEditor: custom command contains forbidden characters')
         return
       }
       command = `${customEditorCommand} "${escapedPath}"`
-    } else if (preferredEditor === 'fork') {
-      command = `open -a Fork "${escapedPath}"`
+    } else if (req.editor === 'fork') {
+      // Fork CLI switches to the repo if Fork is already open; falls back to open -a if CLI missing
+      command = `command -v fork >/dev/null 2>&1 && fork "${escapedPath}" || open -a Fork "${escapedPath}"`
     } else {
-      const bin = PRESET_BINS[preferredEditor as 'zed' | 'cursor' | 'vscode']
+      const bin = PRESET_BINS[req.editor]
       command = `${bin} "${escapedPath}"`
     }
 

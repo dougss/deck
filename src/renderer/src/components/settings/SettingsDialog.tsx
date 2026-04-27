@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown } from 'lucide-react'
-import type { EditorPreset } from '../../../../shared/ipc'
 import { HookInstallSection } from './HookInstallSection'
 import {
   Dialog,
@@ -20,7 +18,6 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React.JSX.Element {
-  const [preferredEditor, setPreferredEditor] = useState('')
   const [customCommand, setCustomCommand] = useState('')
   const [executorCommand, setExecutorCommand] = useState('claude')
   const [ready, setReady] = useState(false)
@@ -29,7 +26,6 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
 
   useEffect(() => {
     window.deck.settings.get().then((s) => {
-      setPreferredEditor(s.preferredEditor ?? '')
       setCustomCommand(s.customEditorCommand ?? '')
       setExecutorCommand(s.defaultExecutorCommand)
       setReady(true)
@@ -37,11 +33,8 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
   }, [])
 
   function validate(): string | null {
-    if (preferredEditor === 'custom') {
-      if (!customCommand.trim()) return 'Enter a command for your custom editor.'
-      if (METACHAR.test(customCommand))
-        return 'Command contains invalid characters (; & | $ > < ` \\).'
-    }
+    if (customCommand.trim() && METACHAR.test(customCommand))
+      return 'Command contains invalid characters (; & | $ > < ` \\).'
     if (!executorCommand.trim()) return 'Executor command is required.'
     return null
   }
@@ -56,8 +49,7 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
     setSaving(true)
     try {
       await window.deck.settings.set({
-        preferredEditor: (preferredEditor as EditorPreset) || null,
-        customEditorCommand: preferredEditor === 'custom' ? customCommand.trim() : null,
+        customEditorCommand: customCommand.trim() || null,
         defaultExecutorCommand: executorCommand.trim()
       })
       await onSaved()
@@ -89,47 +81,21 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
             </p>
             <div className="flex flex-col gap-1.5">
               <label className="font-body text-[12px] font-medium text-op-zinc-400">
-                Preferred editor
+                Custom editor command
               </label>
-              <div className="relative">
-                <select
-                  value={preferredEditor}
-                  onChange={(e) => setPreferredEditor(e.target.value)}
-                  disabled={!ready}
-                  className="h-9 w-full appearance-none bg-op-zinc-900 border border-op-zinc-800 rounded-[7px] px-3 pr-8 text-op-zinc-200 font-body text-[13px] outline-none transition-[border-color,box-shadow] duration-150 cursor-pointer focus:border-accent focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">None</option>
-                  <option value="zed">Zed</option>
-                  <option value="cursor">Cursor</option>
-                  <option value="vscode">VS Code</option>
-                  <option value="fork">Fork</option>
-                  <option value="custom">Custom…</option>
-                </select>
-                <ChevronDown
-                  size={14}
-                  strokeWidth={1.75}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-op-zinc-500 pointer-events-none"
-                />
-              </div>
+              <input
+                type="text"
+                value={customCommand}
+                onChange={(e) => setCustomCommand(e.target.value)}
+                disabled={!ready}
+                placeholder="e.g. my-editor"
+                className="h-9 bg-op-zinc-900 border border-op-zinc-800 rounded-[7px] px-3 text-op-zinc-200 font-mono text-[13px] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-op-zinc-600 focus:border-accent focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p className="font-body text-[11px] text-op-zinc-500">
+                Binary name or path used for "Open in Custom". Workspace path is appended
+                automatically.
+              </p>
             </div>
-
-            {preferredEditor === 'custom' && (
-              <div className="flex flex-col gap-1.5">
-                <label className="font-body text-[12px] font-medium text-op-zinc-400">
-                  Editor command
-                </label>
-                <input
-                  type="text"
-                  value={customCommand}
-                  onChange={(e) => setCustomCommand(e.target.value)}
-                  placeholder="e.g. my-editor"
-                  className="h-9 bg-op-zinc-900 border border-op-zinc-800 rounded-[7px] px-3 text-op-zinc-200 font-mono text-[13px] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-op-zinc-600 focus:border-accent focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)]"
-                />
-                <p className="font-body text-[11px] text-op-zinc-500">
-                  Binary name or path. The workspace path is appended automatically.
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Executor section */}

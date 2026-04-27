@@ -4,7 +4,6 @@ import path from 'node:path'
 import type { DeckSettings } from '../shared/ipc'
 
 const DEFAULT_SETTINGS: DeckSettings = {
-  preferredEditor: null,
   customEditorCommand: null,
   defaultExecutorCommand: 'claude'
 }
@@ -16,7 +15,8 @@ function getSettingsPath(): string {
 export function getSettings(): DeckSettings {
   try {
     const raw = fs.readFileSync(getSettingsPath(), 'utf-8')
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }
+    const { preferredEditor: _removed, ...clean } = JSON.parse(raw)
+    return { ...DEFAULT_SETTINGS, ...clean }
   } catch {
     return { ...DEFAULT_SETTINGS }
   }

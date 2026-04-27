@@ -9,6 +9,7 @@ import {
   type DeckHooksApi,
   type HookEventPayload,
   type HookInstanceStatus,
+  type OpenInEditorRequest,
   type PtyDataEvent,
   type PtyExitEvent,
   type PtyId,
@@ -217,7 +218,7 @@ const deck: DeckApi = {
     }
   } satisfies DeckSettingsApi,
   system: {
-    openInEditor(req: { workspacePath: string }): Promise<void> {
+    openInEditor(req: OpenInEditorRequest): Promise<void> {
       return ipcRenderer.invoke(IPC.SYSTEM_OPEN_IN_EDITOR, req)
     },
     openExternal(url: string): Promise<void> {

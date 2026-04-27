@@ -21,7 +21,7 @@ export function Sidebar(): React.JSX.Element {
     <aside className="w-[280px] flex-shrink-0 bg-op-surface border-r border-op-border flex flex-col">
       <SidebarHeader />
       <SidebarSearch />
-      <WorkspaceList settings={settings} onSettingsRefresh={refreshSettings} />
+      <WorkspaceList settings={settings} />
       <SidebarFooter onSettingsSaved={refreshSettings} />
     </aside>
   )

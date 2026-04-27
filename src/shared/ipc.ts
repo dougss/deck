@@ -231,13 +231,13 @@ export interface DeckShortcutsApi {
 export type EditorPreset = 'zed' | 'cursor' | 'vscode' | 'fork' | 'custom'
 
 export interface DeckSettings {
-  preferredEditor: EditorPreset | null
   customEditorCommand: string | null
   defaultExecutorCommand: string
 }
 
 export interface OpenInEditorRequest {
   workspacePath: string
+  editor: EditorPreset
 }
 
 export interface DeckSettingsApi {
