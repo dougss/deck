@@ -3,7 +3,7 @@
   "version": "0.3.0-beta.8",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
-  "author": "example.com",
+  "author": "Douglas Silva",
   "homepage": "https://electron-vite.org",
   "scripts": {
     "format": "prettier --write .",
@@ -107,5 +107,6 @@
       "electron",
       "esbuild"
     ]
-  }
+  },
+  "license": "MIT"
 }
