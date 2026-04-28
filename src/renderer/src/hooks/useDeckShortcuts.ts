@@ -55,12 +55,23 @@ export function useDeckShortcuts(): void {
       }
     })
 
+    const unsubBranch = window.deck.shortcuts.onBranchSwitcher(() => {
+      const { activeSessionId, sessions, gitInfoMap, triggerOpenBranchSwitcher } =
+        useDeckStore.getState()
+      if (!activeSessionId) return
+      const active = sessions.find((s) => s.id === activeSessionId)
+      if (!active || active.status !== 'working') return
+      if (!gitInfoMap[activeSessionId]?.isRepo) return
+      triggerOpenBranchSwitcher()
+    })
+
     return () => {
       unsubNew()
       unsubStop()
       unsubSwitch()
       unsubFocus()
       unsubTogglePanel()
+      unsubBranch()
     }
   }, [])
 }

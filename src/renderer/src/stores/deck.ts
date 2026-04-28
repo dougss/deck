@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { useShallow } from 'zustand/shallow'
 import { devtools } from 'zustand/middleware'
 import type {
+  GitInfo,
+  GitInfoUpdatedEvent,
   Session,
   SessionId,
   SessionUpdateEvent,
@@ -13,6 +15,7 @@ import type {
 
 type ExpandedMap = Record<WorkspaceId, true | undefined>
 type NotificationMap = Record<SessionId, NotificationState>
+type GitInfoMap = Record<SessionId, GitInfo>
 
 type RightPanelMode = 'planner' | 'terminal'
 
@@ -36,6 +39,9 @@ interface DeckState {
 
   notificationStates: NotificationMap
 
+  gitInfoMap: GitInfoMap
+  openBranchSwitcherTick: number
+
   hydrate: () => Promise<void>
   subscribe: () => () => void
 
@@ -49,6 +55,9 @@ interface DeckState {
   setRightPanelPinned: (pinned: boolean) => void
   setNotificationState: (sessionId: SessionId, state: NotificationState) => void
   clearNotificationState: (sessionId: SessionId) => void
+  setGitInfo: (sessionId: SessionId, info: GitInfo) => void
+  clearGitInfo: (sessionId: SessionId) => void
+  triggerOpenBranchSwitcher: () => void
 }
 
 const sortWorkspaces = (ws: Workspace[]): Workspace[] =>
@@ -83,6 +92,9 @@ export const useDeckStore = create<DeckState>()(
       rightPanelPinned: false,
 
       notificationStates: {},
+
+      gitInfoMap: {},
+      openBranchSwitcherTick: 0,
 
       hydrate: async () => {
         try {
@@ -157,13 +169,26 @@ export const useDeckStore = create<DeckState>()(
                   )
                 }
               }
+              const nextGitMap = { ...state.gitInfoMap }
+              delete nextGitMap[event.id]
               return {
                 sessions: state.sessions.filter((s) => s.id !== event.id),
-                activeSessionId: state.activeSessionId === event.id ? null : state.activeSessionId
+                activeSessionId: state.activeSessionId === event.id ? null : state.activeSessionId,
+                gitInfoMap: nextGitMap
               }
             },
             false,
             `session/${event.type}`
+          )
+        })
+
+        const unsubGit = window.deck.git.onInfoUpdated((event: GitInfoUpdatedEvent) => {
+          set(
+            (state) => ({
+              gitInfoMap: { ...state.gitInfoMap, [event.sessionId]: event.gitInfo }
+            }),
+            false,
+            'git/infoUpdated'
           )
         })
 
@@ -186,6 +211,7 @@ export const useDeckStore = create<DeckState>()(
         subscribeDispose = () => {
           unsubWs()
           unsubSess()
+          unsubGit()
           unsubHooks()
           subscribeDispose = null
         }
@@ -260,6 +286,27 @@ export const useDeckStore = create<DeckState>()(
           }),
           false,
           'hooks/clearNotification'
+        ),
+
+      setGitInfo: (sessionId, info) =>
+        set((s) => ({ gitInfoMap: { ...s.gitInfoMap, [sessionId]: info } }), false, 'git/setInfo'),
+
+      clearGitInfo: (sessionId) =>
+        set(
+          (s) => {
+            const next = { ...s.gitInfoMap }
+            delete next[sessionId]
+            return { gitInfoMap: next }
+          },
+          false,
+          'git/clearInfo'
+        ),
+
+      triggerOpenBranchSwitcher: () =>
+        set(
+          (s) => ({ openBranchSwitcherTick: s.openBranchSwitcherTick + 1 }),
+          false,
+          'ui/openBranchSwitcher'
         )
     }),
     { name: 'deck', enabled: import.meta.env.DEV }
@@ -295,6 +342,9 @@ export const useActiveWorkspace = (): Workspace | null =>
     if (!session) return null
     return s.workspaces.find((w) => w.id === session.workspaceId) ?? null
   })
+
+export const useGitInfo = (sessionId: SessionId): GitInfo | null =>
+  useDeckStore((s) => s.gitInfoMap[sessionId] ?? null)
 
 if (import.meta.env.DEV) {
   // @ts-expect-error intentional dev-only global for debugging

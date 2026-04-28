@@ -44,6 +44,27 @@
   cwd-broadcast em sessions antigas ou sem DECK_SESSION_ID.
   Requer reinstall do hook handler via Settings → Notifications → Install.
 
+### [Phase 3 / C2] Trocar branch exige sair do Deck para terminal/IDE
+
+- **Status:** ✅ RESOLVED in v0.3.0-beta.7
+- **Descrição:** para trocar de branch em qualquer workspace era necessário abrir terminal externo
+  ou IDE, rodar `git checkout <branch>`, e voltar ao Deck. Sem visibilidade da branch ativa
+  diretamente no header da session.
+- **Impacto:** médio. Ocorria múltiplas vezes por dia em daily drive com 3-5 sessions paralelas
+  em projetos distintos.
+- **Workaround:** abrir terminal ou IDE externo para o cwd da session.
+- **Resolução:** branch switcher integrado no SessionHeader ao lado do ConfigBadge.
+  - Ícone git-branch + nome da branch atual (truncado em 22 chars) visível enquanto session attached
+  - Click abre dropdown com branches locais; branch ativa marcada com ●
+  - Cmd+Shift+B abre o mesmo dropdown via shortcut global
+  - Uncommitted changes: toast confirm com [Stash & Switch] [Cancel]
+  - Detached HEAD: ícone git-commit + `@ <SHA-7>`, tooltip "Detached HEAD"
+  - Session idle: indicador dimmed, tooltip "Attach session to switch branches"
+  - **Limitação conhecida:** branch no header fica stale se user troca branch externamente (terminal/IDE)
+    sem re-attach da session. Refresh ocorre ao abrir dropdown (pull on open).
+  - Search filter e keyboard nav adicionados em v0.3.0-beta.7: input auto-focused no topo do dropdown,
+    substring match case-insensitive, Arrow Up/Down/Enter/Esc, scrollIntoView block:nearest.
+
 ---
 
 ## Tentativas e reversões

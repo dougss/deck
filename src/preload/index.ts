@@ -3,10 +3,12 @@ import { homedir } from 'node:os'
 import {
   IPC,
   type DeckApi,
+  type DeckGitApi,
   type DeckSettings,
   type DeckSettingsApi,
   type DeckSystemApi,
   type DeckHooksApi,
+  type GitInfoUpdatedEvent,
   type HookEventPayload,
   type HookInstanceStatus,
   type OpenInEditorRequest,
@@ -15,6 +17,7 @@ import {
   type PtyId,
   type PtySpawnRequest,
   type PtySpawnResponse,
+  type SessionId,
   type SessionUpdateEvent,
   type WorkspaceUpdateEvent,
   type DeckShortcutsApi
@@ -25,12 +28,14 @@ type ExitListener = (info: Omit<PtyExitEvent, 'ptyId'>) => void
 type WorkspaceUpdateListener = (event: WorkspaceUpdateEvent) => void
 type SessionUpdateListener = (event: SessionUpdateEvent) => void
 type HookEventListener = (payload: HookEventPayload) => void
+type GitInfoUpdatedListener = (event: GitInfoUpdatedEvent) => void
 
 const dataListeners = new Map<PtyId, Set<DataListener>>()
 const exitListeners = new Map<PtyId, Set<ExitListener>>()
 const workspaceUpdateListeners = new Set<WorkspaceUpdateListener>()
 const sessionUpdateListeners = new Set<SessionUpdateListener>()
 const hookEventListeners = new Set<HookEventListener>()
+const gitInfoUpdatedListeners = new Set<GitInfoUpdatedListener>()
 
 ipcRenderer.on(IPC.PTY_DATA, (_event, payload: PtyDataEvent) => {
   const set = dataListeners.get(payload.ptyId)
@@ -71,6 +76,16 @@ ipcRenderer.on(IPC.HOOK_EVENT_RECEIVED, (_event, payload: HookEventPayload) => {
       cb(payload)
     } catch (err) {
       console.error('[preload] hooks:event-received listener threw:', err)
+    }
+  }
+})
+
+ipcRenderer.on(IPC.GIT_INFO_UPDATED, (_event, event: GitInfoUpdatedEvent) => {
+  for (const cb of gitInfoUpdatedListeners) {
+    try {
+      cb(event)
+    } catch (err) {
+      console.error('[preload] git:info-updated listener threw:', err)
     }
   }
 })
@@ -207,6 +222,11 @@ const deck: DeckApi = {
       const listener = (): void => cb()
       ipcRenderer.on(IPC.SHORTCUT_TOGGLE_PANEL, listener)
       return () => ipcRenderer.removeListener(IPC.SHORTCUT_TOGGLE_PANEL, listener)
+    },
+    onBranchSwitcher(cb) {
+      const listener = (): void => cb()
+      ipcRenderer.on(IPC.SHORTCUT_BRANCH_SWITCHER, listener)
+      return () => ipcRenderer.removeListener(IPC.SHORTCUT_BRANCH_SWITCHER, listener)
     }
   } satisfies DeckShortcutsApi,
   settings: {
@@ -241,7 +261,27 @@ const deck: DeckApi = {
         hookEventListeners.delete(cb)
       }
     }
-  } satisfies DeckHooksApi
+  } satisfies DeckHooksApi,
+  git: {
+    getInfo(sessionId: SessionId) {
+      return ipcRenderer.invoke(IPC.GIT_GET_INFO, { sessionId })
+    },
+    listBranches(sessionId: SessionId) {
+      return ipcRenderer.invoke(IPC.GIT_LIST_BRANCHES, { sessionId })
+    },
+    checkout(sessionId: SessionId, branch: string) {
+      return ipcRenderer.invoke(IPC.GIT_CHECKOUT, { sessionId, branch })
+    },
+    stashAndCheckout(sessionId: SessionId, branch: string) {
+      return ipcRenderer.invoke(IPC.GIT_STASH_CHECKOUT, { sessionId, branch })
+    },
+    onInfoUpdated(cb: GitInfoUpdatedListener) {
+      gitInfoUpdatedListeners.add(cb)
+      return () => {
+        gitInfoUpdatedListeners.delete(cb)
+      }
+    }
+  } satisfies DeckGitApi
 }
 
 if (process.contextIsolated) {

@@ -19,6 +19,8 @@ import { registerSystemHandlers } from './ipc-handlers-system'
 import { buildApplicationMenu } from './menu'
 import { EventWatcher, DECK_DIR } from './event-watcher'
 import { registerHookHandlers } from './ipc-handlers-hooks'
+import { GitManager } from './git-manager'
+import { registerGitHandlers } from './ipc-handlers-git'
 import { mkdirSync } from 'node:fs'
 
 type SmokeKind = 'db' | 'ws' | 'session'
@@ -110,6 +112,7 @@ app.whenReady().then(async () => {
 
   const workspaceManager = new WorkspaceManager(db)
   const sessionManager = new SessionManager(db, ptyRegistry)
+  const gitManager = new GitManager()
   registerWorkspaceHandlers(workspaceManager, sessionManager, () => mainWindow)
   registerSessionHandlers(sessionManager, () => mainWindow)
   registerPtyHandlers(ptyRegistry, () => mainWindow)
@@ -117,6 +120,7 @@ app.whenReady().then(async () => {
   registerSettingsHandlers()
   registerSystemHandlers()
   registerHookHandlers()
+  registerGitHandlers(gitManager, sessionManager, () => mainWindow)
 
   // Ensure ~/.deck/ exists before starting event watcher
   mkdirSync(DECK_DIR, { recursive: true, mode: 0o755 })

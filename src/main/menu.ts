@@ -61,6 +61,11 @@ export function buildApplicationMenu(mainWindow: BrowserWindow): Menu {
           accelerator: 'CmdOrCtrl+\\',
           click: () => send(IPC.SHORTCUT_TOGGLE_PANEL)
         },
+        {
+          label: 'Switch Branch',
+          accelerator: 'CmdOrCtrl+Shift+B',
+          click: () => send(IPC.SHORTCUT_BRANCH_SWITCHER)
+        },
         { type: 'separator' },
         { role: 'reload' },
         { role: 'forceReload' },

@@ -4,6 +4,18 @@ export type SessionId = string
 export type SessionStatus = 'idle' | 'working'
 export type NotificationState = 'idle' | 'pending' | 'error'
 
+export interface GitInfo {
+  isRepo: boolean
+  currentBranch: string | null
+  head: string | null
+}
+
+export interface GitCheckoutResult {
+  ok: boolean
+  dirty?: boolean
+  error?: string
+}
+
 export const IPC = {
   PTY_SPAWN: 'pty:spawn',
   PTY_WRITE: 'pty:write',
@@ -39,7 +51,13 @@ export const IPC = {
   HOOK_EVENT_RECEIVED: 'hooks:event-received',
   HOOKS_GET_STATUS: 'hooks:get-status',
   HOOKS_INSTALL: 'hooks:install',
-  HOOKS_UNINSTALL: 'hooks:uninstall'
+  HOOKS_UNINSTALL: 'hooks:uninstall',
+  GIT_GET_INFO: 'git:get-info',
+  GIT_LIST_BRANCHES: 'git:list-branches',
+  GIT_CHECKOUT: 'git:checkout',
+  GIT_STASH_CHECKOUT: 'git:stash-checkout',
+  GIT_INFO_UPDATED: 'git:info-updated',
+  SHORTCUT_BRANCH_SWITCHER: 'shortcut:branch-switcher'
 } as const
 
 export interface PtySpawnRequest {
@@ -220,14 +238,6 @@ export interface DeckDialogApi {
   pickFolder(): Promise<string | null>
 }
 
-export interface DeckShortcutsApi {
-  onNewSession(cb: () => void): () => void
-  onStopSession(cb: () => void): () => void
-  onSwitchSession(cb: (n: number) => void): () => void
-  onFocusSearch(cb: () => void): () => void
-  onTogglePanel(cb: () => void): () => void
-}
-
 export type EditorPreset = 'zed' | 'cursor' | 'vscode' | 'fork' | 'custom'
 
 export interface DeckSettings {
@@ -270,6 +280,41 @@ export interface DeckHooksApi {
   onEvent(cb: (payload: HookEventPayload) => void): () => void
 }
 
+export interface GitGetInfoRequest {
+  sessionId: SessionId
+}
+
+export interface GitListBranchesRequest {
+  sessionId: SessionId
+}
+
+export interface GitCheckoutRequest {
+  sessionId: SessionId
+  branch: string
+}
+
+export interface GitInfoUpdatedEvent {
+  sessionId: SessionId
+  gitInfo: GitInfo
+}
+
+export interface DeckGitApi {
+  getInfo(sessionId: SessionId): Promise<GitInfo>
+  listBranches(sessionId: SessionId): Promise<string[]>
+  checkout(sessionId: SessionId, branch: string): Promise<GitCheckoutResult>
+  stashAndCheckout(sessionId: SessionId, branch: string): Promise<GitCheckoutResult>
+  onInfoUpdated(cb: (event: GitInfoUpdatedEvent) => void): () => void
+}
+
+export interface DeckShortcutsApi {
+  onNewSession(cb: () => void): () => void
+  onStopSession(cb: () => void): () => void
+  onSwitchSession(cb: (n: number) => void): () => void
+  onFocusSearch(cb: () => void): () => void
+  onTogglePanel(cb: () => void): () => void
+  onBranchSwitcher(cb: () => void): () => void
+}
+
 export interface DeckApi {
   env: DeckEnv
   pty: DeckPtyApi
@@ -280,4 +325,5 @@ export interface DeckApi {
   settings: DeckSettingsApi
   system: DeckSystemApi
   hooks: DeckHooksApi
+  git: DeckGitApi
 }

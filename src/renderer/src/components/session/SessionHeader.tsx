@@ -1,5 +1,6 @@
-import { useActiveSession, useActiveWorkspace } from '@/stores/deck'
+import { useActiveSession, useActiveWorkspace, useGitInfo } from '@/stores/deck'
 import { ConfigBadge, IconButton, type ConfigBadgeVariant } from '@/components/ui'
+import { BranchSwitcher } from './BranchSwitcher'
 
 function getConfigLabel(workspaceName: string): { label: string; variant: ConfigBadgeVariant } {
   if (workspaceName.toLowerCase().includes('leve')) {
@@ -11,6 +12,7 @@ function getConfigLabel(workspaceName: string): { label: string; variant: Config
 export function SessionHeader(): React.JSX.Element {
   const session = useActiveSession()
   const workspace = useActiveWorkspace()
+  const gitInfo = useGitInfo(session?.id ?? '')
 
   if (!session || !workspace) {
     return (
@@ -69,8 +71,15 @@ export function SessionHeader(): React.JSX.Element {
         </div>
       </div>
 
-      {/* Right: config badge + more button */}
+      {/* Right: branch switcher + config badge + more button */}
       <div className="flex items-center gap-2.5 flex-shrink-0">
+        {gitInfo?.isRepo && (
+          <BranchSwitcher
+            sessionId={session.id}
+            gitInfo={gitInfo}
+            isIdle={session.status === 'idle'}
+          />
+        )}
         <ConfigBadge label={label} variant={variant} />
         <IconButton label="More options">
           <svg
