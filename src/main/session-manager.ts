@@ -10,6 +10,7 @@ import type {
   SessionId,
   SessionPatch,
   SessionStatus,
+  SessionType,
   SessionUpdateEvent,
   WorkspaceId
 } from '../shared/ipc'
@@ -27,6 +28,7 @@ interface SessionRow {
   sub_text: string
   status: string
   kind: string
+  type: string
   created_at: number
   last_active_at: number
 }
@@ -105,6 +107,7 @@ export class SessionManager extends EventEmitter<EventMap> {
       subText: row.sub_text,
       status: toStatus(row.status),
       kind: (row.kind === 'planner' ? 'planner' : 'executor') as Session['kind'],
+      type: (row.type === 'shell' ? 'shell' : 'claude-code') as SessionType,
       createdAt: row.created_at,
       lastActiveAt: row.last_active_at,
       ptyId: record?.ptyId ?? null,
@@ -132,7 +135,9 @@ export class SessionManager extends EventEmitter<EventMap> {
   create(req: SessionCreateRequest): Session {
     const name = validateNonEmpty('name', req.name)
     const cwd = validateNonEmpty('cwd', req.cwd)
-    const command = validateNonEmpty('command', req.command)
+    const type: SessionType = req.type === 'shell' ? 'shell' : 'claude-code'
+    const command =
+      type === 'shell' ? (req.command ?? '') : validateNonEmpty('command', req.command)
     const subText = req.subText ?? ''
 
     const workspaceRow = this.db
@@ -147,10 +152,10 @@ export class SessionManager extends EventEmitter<EventMap> {
     this.db
       .prepare(
         `INSERT INTO sessions
-          (id, workspace_id, name, cwd, command, sub_text, status, kind, created_at, last_active_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'idle', ?, ?, ?)`
+          (id, workspace_id, name, cwd, command, sub_text, status, kind, type, created_at, last_active_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'idle', ?, ?, ?, ?)`
       )
-      .run(id, req.workspaceId, name, cwd, command, subText, kind, now, now)
+      .run(id, req.workspaceId, name, cwd, command, subText, kind, type, now, now)
 
     const session = this.get(id)!
     this.emit('updated', { type: 'created', session })
@@ -217,12 +222,14 @@ export class SessionManager extends EventEmitter<EventMap> {
 
     const direnvPrefix =
       'eval "$(command -v direnv >/dev/null 2>&1 && direnv export zsh 2>/dev/null)";'
+    const spawnArgs =
+      current.type === 'shell' ? ['-il'] : ['-ilc', `${direnvPrefix} ${current.command}`]
     const { id: ptyId, manager } = this.ptyRegistry.create({
       cwd: current.cwd,
       cols,
       rows,
       shell: '/bin/zsh',
-      args: ['-ilc', `${direnvPrefix} ${current.command}`],
+      args: spawnArgs,
       env: { DECK_SESSION_ID: id }
     })
 

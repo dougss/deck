@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import { Terminal } from 'lucide-react'
 import { StatusDot, type StatusDotVariant } from '@/components/ui/StatusDot'
 import { formatRelativeTime } from '@/lib/time'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
@@ -133,8 +134,11 @@ export function SessionItem({
                 e.stopPropagation()
                 nameEdit.startEdit()
               }}
-              className={`font-mono text-[13px] font-medium leading-snug truncate ${isActive ? 'text-op-zinc-50' : 'text-op-zinc-100'}`}
+              className={`flex items-center gap-1 font-mono text-[13px] font-medium leading-snug truncate ${isActive ? 'text-op-zinc-50' : 'text-op-zinc-100'}`}
             >
+              {session.type === 'shell' && (
+                <Terminal size={9} strokeWidth={1.75} className="text-op-zinc-600 flex-shrink-0" />
+              )}
               {session.name}
             </div>
           )}

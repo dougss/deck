@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Plus } from 'lucide-react'
-import { useWorkspaces, useSessions, useSearchQuery } from '@/stores/deck'
-import type { DeckSettings, Session, Workspace } from '../../../../shared/ipc'
+import { useWorkspaces, useSessions, useSearchQuery, useDeckStore } from '@/stores/deck'
+import type { DeckSettings, Session, SessionType, Workspace } from '../../../../shared/ipc'
 import { WorkspaceGroup } from './WorkspaceGroup'
 import { WorkspaceDialog } from './WorkspaceDialog'
 import { DeleteWorkspaceDialog } from './DeleteWorkspaceDialog'
@@ -23,6 +23,29 @@ export function WorkspaceList({ settings }: WorkspaceListProps): React.JSX.Eleme
 
   const [sessionCreateWs, setSessionCreateWs] = useState<Workspace | null>(null)
   const [sessionDeleteTarget, setSessionDeleteTarget] = useState<Session | null>(null)
+  const setActive = useDeckStore((s) => s.setActive)
+
+  async function handleNewSession(ws: Workspace, type: SessionType): Promise<void> {
+    if (type === 'shell') {
+      try {
+        const session = await window.deck.session.create({
+          workspaceId: ws.id,
+          name: 'zsh',
+          cwd: ws.path,
+          command: '',
+          type: 'shell'
+        })
+        setActive(session.id)
+        window.deck.session.attach({ id: session.id }).catch((err) => {
+          console.error('[Deck] Auto-attach shell session failed:', err)
+        })
+      } catch (err) {
+        console.error('[Deck] Create shell session failed:', err)
+      }
+    } else {
+      setSessionCreateWs(ws)
+    }
+  }
 
   const hasAnyMatch = useMemo(() => {
     if (!searchQuery) return true
@@ -59,7 +82,7 @@ export function WorkspaceList({ settings }: WorkspaceListProps): React.JSX.Eleme
               customEditorCommand={settings?.customEditorCommand ?? null}
               onEdit={setEditTarget}
               onDelete={setDeleteTarget}
-              onNewSession={setSessionCreateWs}
+              onNewSession={handleNewSession}
               onDeleteSession={setSessionDeleteTarget}
             />
           ))}

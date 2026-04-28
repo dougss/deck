@@ -18,6 +18,12 @@ const migrations: Migration[] = [
     up: (db): void => {
       db.exec(`ALTER TABLE sessions ADD COLUMN kind TEXT NOT NULL DEFAULT 'executor'`)
     }
+  },
+  {
+    version: 3,
+    up: (db): void => {
+      db.exec(`ALTER TABLE sessions ADD COLUMN type TEXT NOT NULL DEFAULT 'claude-code'`)
+    }
   }
 ]
 

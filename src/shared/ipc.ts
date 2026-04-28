@@ -2,6 +2,7 @@ export type PtyId = string
 export type WorkspaceId = string
 export type SessionId = string
 export type SessionStatus = 'idle' | 'working'
+export type SessionType = 'claude-code' | 'shell'
 export type NotificationState = 'idle' | 'pending' | 'error'
 
 export interface GitInfo {
@@ -174,6 +175,7 @@ export interface Session {
   subText: string
   status: SessionStatus
   kind: 'executor' | 'planner'
+  type: SessionType
   createdAt: number
   lastActiveAt: number
   ptyId: PtyId | null
@@ -187,6 +189,7 @@ export interface SessionCreateRequest {
   command: string
   subText?: string
   kind?: 'executor' | 'planner'
+  type?: SessionType
 }
 
 export type SessionPatch = Partial<Pick<Session, 'name' | 'cwd' | 'command' | 'subText'>>

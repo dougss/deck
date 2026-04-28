@@ -1,8 +1,13 @@
 import { useActiveSession, useActiveWorkspace, useGitInfo } from '@/stores/deck'
 import { ConfigBadge, IconButton, type ConfigBadgeVariant } from '@/components/ui'
 import { BranchSwitcher } from './BranchSwitcher'
+import type { SessionType } from '../../../../shared/ipc'
 
-function getConfigLabel(workspaceName: string): { label: string; variant: ConfigBadgeVariant } {
+function getConfigLabel(
+  workspaceName: string,
+  sessionType: SessionType
+): { label: string; variant: ConfigBadgeVariant } {
+  if (sessionType === 'shell') return { label: 'shell', variant: 'neutral' }
   if (workspaceName.toLowerCase().includes('leve')) {
     return { label: 'claude-levesaude', variant: 'cyan' }
   }
@@ -22,7 +27,7 @@ export function SessionHeader(): React.JSX.Element {
     )
   }
 
-  const { label, variant } = getConfigLabel(workspace.name)
+  const { label, variant } = getConfigLabel(workspace.name, session.type)
 
   return (
     <div className="h-[50px] flex-shrink-0 flex items-center justify-between px-5 gap-4 bg-op-surface-2 border-b border-op-border">
