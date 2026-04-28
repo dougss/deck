@@ -6,10 +6,12 @@ export function GlobalSessionDialog(): React.JSX.Element | null {
   const closeDialog = useDeckStore((s) => s.closeNewSessionDialog)
   const workspaces = useWorkspaces()
 
-  if (!workspaceId) return null
+  if (!workspaceId || workspaces.length === 0) return null
 
   const workspace = workspaces.find((w) => w.id === workspaceId)
   if (!workspace) return null
 
-  return <SessionDialog workspace={workspace} onClose={closeDialog} />
+  return (
+    <SessionDialog initialWorkspace={workspace} workspaces={workspaces} onClose={closeDialog} />
+  )
 }

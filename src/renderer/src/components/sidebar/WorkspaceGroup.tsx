@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import type { Session, SessionType, Workspace } from '../../../../shared/ipc'
+import { Plus } from 'lucide-react'
+import type { Session, Workspace } from '../../../../shared/ipc'
 import {
   useSessionsByWorkspace,
   useIsWorkspaceExpanded,
@@ -10,14 +11,13 @@ import {
 import { WorkspaceRow } from './WorkspaceRow'
 import { SessionItem } from './SessionItem'
 import { WorkspaceContextMenu } from './WorkspaceContextMenu'
-import { NewSessionMenu } from './NewSessionMenu'
 
 interface WorkspaceGroupProps {
   workspace: Workspace
   customEditorCommand: string | null
   onEdit: (ws: Workspace) => void
   onDelete: (ws: Workspace) => void
-  onNewSession: (ws: Workspace, type: SessionType) => void
+  onNewSession: (ws: Workspace) => void
   onDeleteSession: (session: Session) => void
 }
 
@@ -81,7 +81,19 @@ export function WorkspaceGroup({
             />
           ))}
 
-          <NewSessionMenu workspace={workspace} onSelect={onNewSession} />
+          <button
+            onClick={() => !workspace.needsSetup && onNewSession(workspace)}
+            disabled={workspace.needsSetup}
+            title={
+              workspace.needsSetup
+                ? "Workspace path doesn't exist. Edit workspace first."
+                : undefined
+            }
+            className="flex items-center gap-1.5 ml-1.5 mt-0.5 px-2.5 py-1.5 rounded-[5px] font-body text-[11px] font-medium text-op-zinc-600 hover:text-op-zinc-400 hover:bg-op-zinc-900 transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-op-zinc-600"
+          >
+            <Plus size={10} strokeWidth={2} />
+            New session
+          </button>
         </div>
       )}
     </div>
