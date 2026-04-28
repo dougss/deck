@@ -43,3 +43,51 @@
   4-col novo) e faz match exato por session ID quando disponível, com fallback para
   cwd-broadcast em sessions antigas ou sem DECK_SESSION_ID.
   Requer reinstall do hook handler via Settings → Notifications → Install.
+
+---
+
+## Tentativas e reversões
+
+### Working state via UserPromptSubmit (revertido em v0.3.0-beta.5)
+
+Tentativa: adicionar estado visual 'working' (azul pulsante) para sessions com CC
+processando, via hook UserPromptSubmit.
+
+Razão da reversão:
+
+- Hook-based detection acumulou múltiplas camadas de fragilidade
+- Bugs de timing entre store action, filter active session, e transições de estado
+  pending→working
+- Múltiplos hooks competindo no UserPromptSubmit (agent-deck, superset, deck) aumentaram
+  superfície de erro
+- Daily drive em uso real revelou comportamento inconsistente: estado preso, transições
+  não confiáveis, working não aparecendo em casos esperados
+- Custo de manutenção e debug > valor entregue ao usuário
+
+Aprendizado:
+
+- Hooks do CC são adequados para eventos de conclusão (Stop, Notification), não para
+  detectar estado de execução em andamento
+- "Está executando" pode ser inferido implicitamente: dot verde inactive = ainda
+  processando (porque se tivesse terminado seria amarelo via Stop hook)
+- Detecção precisa de "working" exigiria refactor arquitetural (subprocess control
+  direto, estilo opcode), fora do escopo Phase 3
+
+O que ficou da tentativa:
+
+- Idle visual quiet: variant 'working' do StatusDot virou verde ESTÁTICO em vez de
+  pulse green. Resolve a friction "verde fica muito tempo erroneamente" registrada antes.
+- Investigação documentada do CC hook system (28 eventos, schema UserPromptSubmit,
+  edge cases Ctrl+C)
+
+Status atual — 4 estados visuais ativos:
+
+- detached (cinza estático)
+- idle (verde estático)
+- pending (amarelo pulsante) — Stop hook
+- error (vermelho pulsante) — StopFailure hook
+
+Nota de upgrade: settings.json pode conter entry `UserPromptSubmit` órfã de installs
+anteriores. Não causa bug — o hook-handler.sh não reconhece mais o evento e o Deck
+ignora linhas `working` no events.log. User pode re-rodar Settings → Install para
+limpar, mas não é obrigatório.

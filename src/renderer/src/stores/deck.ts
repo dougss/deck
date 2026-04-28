@@ -170,7 +170,6 @@ export const useDeckStore = create<DeckState>()(
         const unsubHooks = window.deck.hooks.onEvent((payload) => {
           set(
             (state) => {
-              // Active session is already visible — no dot needed
               if (payload.sessionId === state.activeSessionId) return state
               return {
                 notificationStates: {

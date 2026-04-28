@@ -24,12 +24,14 @@ export function SessionItem({
   const notificationState = useDeckStore((s) => s.notificationStates[session.id] ?? 'idle')
 
   let dotVariant: StatusDotVariant
-  if (!isActive && notificationState === 'pending') {
-    dotVariant = 'pending'
-  } else if (!isActive && notificationState === 'error') {
+  if (!isActive && notificationState === 'error') {
     dotVariant = 'error'
+  } else if (!isActive && notificationState === 'pending') {
+    dotVariant = 'pending'
+  } else if (session.status === 'working') {
+    dotVariant = 'working'
   } else {
-    dotVariant = session.status === 'working' ? 'working' : 'idle'
+    dotVariant = 'idle'
   }
 
   const nameEdit = useInlineEdit(session.name)
