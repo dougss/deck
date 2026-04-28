@@ -11,8 +11,6 @@ export interface DefaultWorkspace {
 }
 
 export const DEFAULT_WORKSPACES: DefaultWorkspace[] = [
-  { name: 'Leve Saúde', accent: '#06b6d4', rel: 'Projects/Leve_saude' },
-  { name: 'DevSkin', accent: '#ec4899', rel: 'Projects/DevSkin' },
   { name: 'Personal', accent: '#8b5cf6', rel: '' }
 ]
 

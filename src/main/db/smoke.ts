@@ -52,11 +52,11 @@ export async function runSmoke(): Promise<number> {
     return `user_version=${v}`
   })
 
-  record(results, '3. 3 workspaces seeded', () => {
+  record(results, '3. 1 workspace seeded', () => {
     const { db } = initDatabase(SMOKE_DB)
     const { c } = db.prepare('SELECT COUNT(*) as c FROM workspaces').get() as { c: number }
     db.close()
-    if (c !== 3) throw new Error(`expected 3, got ${c}`)
+    if (c !== 1) throw new Error(`expected 1, got ${c}`)
     return `count=${c}`
   })
 
@@ -64,7 +64,7 @@ export async function runSmoke(): Promise<number> {
     const { db, isFreshInstall } = initDatabase(SMOKE_DB)
     const { c } = db.prepare('SELECT COUNT(*) as c FROM workspaces').get() as { c: number }
     db.close()
-    if (c !== 3) throw new Error(`expected 3 after re-init, got ${c}`)
+    if (c !== 1) throw new Error(`expected 1 after re-init, got ${c}`)
     if (isFreshInstall) throw new Error('expected isFreshInstall=false on 2nd init')
     return `count=${c}, fresh=${isFreshInstall}`
   })
@@ -75,7 +75,7 @@ export async function runSmoke(): Promise<number> {
       .prepare('SELECT name, path, needs_setup FROM workspaces ORDER BY ordinal')
       .all() as { name: string; path: string; needs_setup: number }[]
     db.close()
-    if (rows.length !== 3) throw new Error('expected 3 rows')
+    if (rows.length !== 1) throw new Error('expected 1 row')
     const personal = rows.find((r) => r.name === 'Personal')
     if (!personal) throw new Error('Personal missing')
     if (personal.needs_setup !== 0) throw new Error('Personal (HOME) should always exist')
@@ -88,12 +88,8 @@ export async function runSmoke(): Promise<number> {
       .prepare('SELECT name, accent_color, ordinal FROM workspaces ORDER BY ordinal')
       .all() as { name: string; accent_color: string; ordinal: number }[]
     db.close()
-    const expected = [
-      { name: 'Leve Saúde', accent_color: '#06b6d4', ordinal: 0 },
-      { name: 'DevSkin', accent_color: '#ec4899', ordinal: 1 },
-      { name: 'Personal', accent_color: '#8b5cf6', ordinal: 2 }
-    ]
-    for (let i = 0; i < 3; i++) {
+    const expected = [{ name: 'Personal', accent_color: '#8b5cf6', ordinal: 0 }]
+    for (let i = 0; i < 1; i++) {
       const got = rows[i]
       const want = expected[i]
       if (got.name !== want.name) throw new Error(`row ${i} name: ${got.name} !== ${want.name}`)
@@ -101,7 +97,7 @@ export async function runSmoke(): Promise<number> {
         throw new Error(`row ${i} accent: ${got.accent_color} !== ${want.accent_color}`)
       if (got.ordinal !== want.ordinal) throw new Error(`row ${i} ordinal mismatch`)
     }
-    return '3 rows match name/accent/ordinal'
+    return '1 row matches name/accent/ordinal'
   })
 
   record(results, '7. CASCADE DELETE removes sessions', () => {
