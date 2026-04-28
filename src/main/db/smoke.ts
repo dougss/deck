@@ -2,7 +2,7 @@ import { existsSync, rmSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import Database from 'better-sqlite3'
 import { initDatabase } from './index'
-import { migrate } from './migrations'
+import { migrate, LATEST_VERSION } from './migrations'
 import { seedDefaults } from './seed'
 
 interface TestResult {
@@ -38,7 +38,8 @@ export async function runSmoke(): Promise<number> {
     const { db, isFreshInstall, fromVersion, toVersion } = initDatabase(SMOKE_DB)
     if (!existsSync(SMOKE_DB)) throw new Error('DB file not created')
     if (fromVersion !== 0) throw new Error(`expected fromVersion=0, got ${fromVersion}`)
-    if (toVersion !== 1) throw new Error(`expected toVersion=1, got ${toVersion}`)
+    if (toVersion !== LATEST_VERSION)
+      throw new Error(`expected toVersion=${LATEST_VERSION}, got ${toVersion}`)
     if (!isFreshInstall) throw new Error('expected isFreshInstall=true')
     db.close()
     return `v${fromVersion} -> v${toVersion}, fresh=${isFreshInstall}`
@@ -48,7 +49,7 @@ export async function runSmoke(): Promise<number> {
     const { db } = initDatabase(SMOKE_DB)
     const v = db.pragma('user_version', { simple: true }) as number
     db.close()
-    if (v !== 1) throw new Error(`expected 1, got ${v}`)
+    if (v !== LATEST_VERSION) throw new Error(`expected ${LATEST_VERSION}, got ${v}`)
     return `user_version=${v}`
   })
 

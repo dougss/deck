@@ -27,6 +27,8 @@ const migrations: Migration[] = [
   }
 ]
 
+export const LATEST_VERSION = migrations[migrations.length - 1].version
+
 export interface MigrateResult {
   fromVersion: number
   toVersion: number
