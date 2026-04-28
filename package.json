@@ -1,10 +1,17 @@
 {
   "name": "deck",
   "version": "0.3.0-beta.8",
-  "description": "An Electron application with React and TypeScript",
+  "description": "Multi-session Claude Code orchestrator for macOS",
   "main": "./out/main/index.js",
   "author": "Douglas Silva",
-  "homepage": "https://electron-vite.org",
+  "homepage": "https://github.com/dougss/deck",
+  "bugs": {
+    "url": "https://github.com/dougss/deck/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dougss/deck.git"
+  },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
@@ -68,7 +75,7 @@
     "vite": "^7.2.6"
   },
   "build": {
-    "appId": "com.douglas.deck",
+    "appId": "com.deck.app",
     "productName": "Deck",
     "directories": {
       "output": "dist"

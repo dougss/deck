@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: deck
+appId: com.deck.app
+productName: Deck
 directories:
   buildResources: build
 files:
