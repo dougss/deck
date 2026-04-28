@@ -9,7 +9,7 @@ Multi-session Claude Code orchestrator for macOS.
 
 ---
 
-Deck is a macOS desktop app for running multiple Claude Code sessions side by side, organized by workspace and git branch. Built for developers who use Claude Code heavily and need parallel sessions without losing context.
+Run multiple Claude Code sessions in parallel, organized by workspace and git branch. For developers who need to keep multiple agentic conversations alive without context loss.
 
 > **Beta software.** Expect rough edges. File issues on [GitHub](https://github.com/dougss/deck/issues).
 
@@ -86,10 +86,11 @@ pnpm build:mac
 
 ## Quickstart
 
-1. Open Deck
-2. A default workspace is created on first launch
-3. Click **+ New session** → choose **Claude Code** or **Shell**
-4. Navigate between sessions using the shortcuts below
+1. Open Deck — a default workspace is created on first launch
+2. Click **+ New session** → choose **Claude Code** or **Shell**
+3. Configure the session: name, working directory, and (for Claude Code) the command
+4. Open additional sessions with Cmd+N or via Cmd+P → "New Claude Code session"
+5. Navigate between sessions using the shortcuts below
 
 ### Keyboard shortcuts
 
@@ -156,7 +157,7 @@ Issues and pull requests are welcome. No formal contribution process yet.
 
 ## License
 
-[MIT](LICENSE)
+MIT — see [LICENSE](LICENSE) file.
 
 ---
 
