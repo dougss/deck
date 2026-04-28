@@ -3,6 +3,7 @@ import { AppShell } from './components/shell/AppShell'
 import { StatusBar } from './components/session/StatusBar'
 import { TerminalHost } from './components/terminal/TerminalHost'
 import { GlobalSessionDialog } from './components/GlobalSessionDialog'
+import { CommandPalette } from './components/CommandPalette'
 import { ToastProvider } from './components/ui/Toast'
 import { useDeckBootstrap } from './hooks/useDeckBootstrap'
 import { useDeckShortcuts } from './hooks/useDeckShortcuts'
@@ -22,6 +23,7 @@ export function App(): React.JSX.Element {
           <StatusBar />
         </AppBody>
         <GlobalSessionDialog />
+        <CommandPalette />
       </AppShell>
     </ToastProvider>
   )

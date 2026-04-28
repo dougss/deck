@@ -62,6 +62,11 @@ export function buildApplicationMenu(mainWindow: BrowserWindow): Menu {
           click: () => send(IPC.SHORTCUT_TOGGLE_PANEL)
         },
         {
+          label: 'Command Palette',
+          accelerator: 'CmdOrCtrl+P',
+          click: () => send(IPC.SHORTCUT_COMMAND_PALETTE)
+        },
+        {
           label: 'Switch Branch',
           accelerator: 'CmdOrCtrl+Shift+B',
           click: () => send(IPC.SHORTCUT_BRANCH_SWITCHER)

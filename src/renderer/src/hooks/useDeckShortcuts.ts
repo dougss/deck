@@ -65,6 +65,10 @@ export function useDeckShortcuts(): void {
       triggerOpenBranchSwitcher()
     })
 
+    const unsubPalette = window.deck.shortcuts.onCommandPalette(() => {
+      useDeckStore.getState().openPalette()
+    })
+
     return () => {
       unsubNew()
       unsubStop()
@@ -72,6 +76,7 @@ export function useDeckShortcuts(): void {
       unsubFocus()
       unsubTogglePanel()
       unsubBranch()
+      unsubPalette()
     }
   }, [])
 }

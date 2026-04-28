@@ -28,6 +28,7 @@ interface SessionDialogProps {
   initialWorkspace: Workspace
   workspaces: Workspace[]
   defaultCommand?: string
+  initialType?: SessionType
   onClose: () => void
 }
 
@@ -35,15 +36,16 @@ export function SessionDialog({
   initialWorkspace,
   workspaces,
   defaultCommand = 'claude',
+  initialType,
   onClose
 }: SessionDialogProps): React.JSX.Element {
   const setActive = useDeckStore((s) => s.setActive)
 
-  const [type, setType] = useState<SessionType>(getLastType)
+  const [type, setType] = useState<SessionType>(initialType ?? getLastType)
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(initialWorkspace.id)
   const selectedWorkspace = workspaces.find((w) => w.id === selectedWorkspaceId) ?? initialWorkspace
 
-  const [name, setName] = useState(() => autoName(initialWorkspace, getLastType()))
+  const [name, setName] = useState(() => autoName(initialWorkspace, initialType ?? getLastType()))
   const [nameDirty, setNameDirty] = useState(false)
   const [cwd, setCwd] = useState(initialWorkspace.path)
   const [cwdDirty, setCwdDirty] = useState(false)

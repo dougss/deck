@@ -3,6 +3,7 @@ import { SessionDialog } from './sidebar/SessionDialog'
 
 export function GlobalSessionDialog(): React.JSX.Element | null {
   const workspaceId = useDeckStore((s) => s.newSessionDialogWorkspaceId)
+  const initialType = useDeckStore((s) => s.newSessionDialogInitialType)
   const closeDialog = useDeckStore((s) => s.closeNewSessionDialog)
   const workspaces = useWorkspaces()
 
@@ -12,6 +13,11 @@ export function GlobalSessionDialog(): React.JSX.Element | null {
   if (!workspace) return null
 
   return (
-    <SessionDialog initialWorkspace={workspace} workspaces={workspaces} onClose={closeDialog} />
+    <SessionDialog
+      initialWorkspace={workspace}
+      workspaces={workspaces}
+      initialType={initialType ?? undefined}
+      onClose={closeDialog}
+    />
   )
 }

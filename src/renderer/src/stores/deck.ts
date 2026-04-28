@@ -6,6 +6,7 @@ import type {
   GitInfoUpdatedEvent,
   Session,
   SessionId,
+  SessionType,
   SessionUpdateEvent,
   Workspace,
   WorkspaceId,
@@ -31,6 +32,9 @@ interface DeckState {
   hydrationError: string | null
 
   newSessionDialogWorkspaceId: WorkspaceId | null
+  newSessionDialogInitialType: SessionType | null
+  isPaletteOpen: boolean
+  isSettingsOpen: boolean
   focusSearchTick: number
 
   activeRightPanel: RightPanelMode | null
@@ -48,8 +52,12 @@ interface DeckState {
   setActive: (id: SessionId | null) => void
   toggleWorkspace: (id: WorkspaceId) => void
   setSearch: (q: string) => void
-  openNewSessionDialog: (workspaceId: WorkspaceId) => void
+  openNewSessionDialog: (workspaceId: WorkspaceId, initialType?: SessionType) => void
   closeNewSessionDialog: () => void
+  openPalette: () => void
+  closePalette: () => void
+  openSettingsDialog: () => void
+  closeSettingsDialog: () => void
   triggerFocusSearch: () => void
   toggleRightPanel: (mode: RightPanelMode) => void
   setRightPanelPinned: (pinned: boolean) => void
@@ -85,6 +93,9 @@ export const useDeckStore = create<DeckState>()(
       hydrated: false,
       hydrationError: null,
       newSessionDialogWorkspaceId: null,
+      newSessionDialogInitialType: null,
+      isPaletteOpen: false,
+      isSettingsOpen: false,
       focusSearchTick: 0,
 
       activeRightPanel: null,
@@ -244,11 +255,28 @@ export const useDeckStore = create<DeckState>()(
 
       setSearch: (q) => set({ searchQuery: q }, false, 'ui/setSearch'),
 
-      openNewSessionDialog: (workspaceId) =>
-        set({ newSessionDialogWorkspaceId: workspaceId }, false, 'ui/openNewSessionDialog'),
+      openNewSessionDialog: (workspaceId, initialType) =>
+        set(
+          {
+            newSessionDialogWorkspaceId: workspaceId,
+            newSessionDialogInitialType: initialType ?? null
+          },
+          false,
+          'ui/openNewSessionDialog'
+        ),
 
       closeNewSessionDialog: () =>
-        set({ newSessionDialogWorkspaceId: null }, false, 'ui/closeNewSessionDialog'),
+        set(
+          { newSessionDialogWorkspaceId: null, newSessionDialogInitialType: null },
+          false,
+          'ui/closeNewSessionDialog'
+        ),
+
+      openPalette: () => set({ isPaletteOpen: true }, false, 'ui/openPalette'),
+      closePalette: () => set({ isPaletteOpen: false }, false, 'ui/closePalette'),
+
+      openSettingsDialog: () => set({ isSettingsOpen: true }, false, 'ui/openSettingsDialog'),
+      closeSettingsDialog: () => set({ isSettingsOpen: false }, false, 'ui/closeSettingsDialog'),
 
       triggerFocusSearch: () =>
         set(

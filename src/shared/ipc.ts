@@ -58,7 +58,8 @@ export const IPC = {
   GIT_CHECKOUT: 'git:checkout',
   GIT_STASH_CHECKOUT: 'git:stash-checkout',
   GIT_INFO_UPDATED: 'git:info-updated',
-  SHORTCUT_BRANCH_SWITCHER: 'shortcut:branch-switcher'
+  SHORTCUT_BRANCH_SWITCHER: 'shortcut:branch-switcher',
+  SHORTCUT_COMMAND_PALETTE: 'shortcut:command-palette'
 } as const
 
 export interface PtySpawnRequest {
@@ -316,6 +317,7 @@ export interface DeckShortcutsApi {
   onFocusSearch(cb: () => void): () => void
   onTogglePanel(cb: () => void): () => void
   onBranchSwitcher(cb: () => void): () => void
+  onCommandPalette(cb: () => void): () => void
 }
 
 export interface DeckApi {

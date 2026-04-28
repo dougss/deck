@@ -227,6 +227,11 @@ const deck: DeckApi = {
       const listener = (): void => cb()
       ipcRenderer.on(IPC.SHORTCUT_BRANCH_SWITCHER, listener)
       return () => ipcRenderer.removeListener(IPC.SHORTCUT_BRANCH_SWITCHER, listener)
+    },
+    onCommandPalette(cb) {
+      const listener = (): void => cb()
+      ipcRenderer.on(IPC.SHORTCUT_COMMAND_PALETTE, listener)
+      return () => ipcRenderer.removeListener(IPC.SHORTCUT_COMMAND_PALETTE, listener)
     }
   } satisfies DeckShortcutsApi,
   settings: {
