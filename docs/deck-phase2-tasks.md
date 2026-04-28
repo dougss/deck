@@ -59,8 +59,6 @@ se vazio**, nunca sobrescrevem input manual.
 **ACK:** ✅ aceito **com ajuste**.
 Seed:
 
-- Leve Saúde — `#06b6d4` — `~/Projects/Leve_saude`
-- DevSkin — `#ec4899` — `~/Projects/DevSkin`
 - Personal — `#8b5cf6` — `~`
 
 Antes de inserir, `fs.existsSync(path)`. Se não existe, insere com
@@ -269,9 +267,9 @@ BrandMark,AccountAvatar,SidebarSearch,WorkspaceList,WorkspaceGroup,
 WorkspaceRow,SessionItem,SidebarFooter}.tsx`.
 - **Arquivos modificados:** `AppShell` pra montar `<Sidebar>`.
 - **Não tocar:** backend, preload, Terminal lifecycle.
-- **Sucesso:** após primeiro boot, sidebar mostra 3 workspaces com
-  cores/counts; criar session via DevTools aparece via push; DevSkin
-  com alert icon; search filtra; active state correto.
+- **Sucesso:** após primeiro boot, sidebar mostra workspaces com
+  cores/counts; criar session via DevTools aparece via push; workspace com
+  needs_setup=true exibe alert icon; search filtra; active state correto.
 - **Deps:** Tasks 6, 7.
 - **Estimativa:** **L (4-8h)**.
 - **Risco:** desalinhamento visual com mockup (aceitar 95% fidelity,
@@ -378,8 +376,8 @@ ClaudeConfigBadge,MoreMenuButton,StatusBar}.tsx`; lê
 - **Escopo OUT:** shortcuts globais.
 - **Arquivos modificados:** `StatusBar.tsx`, `src/main/index.ts`.
 - **Não tocar:** demais.
-- **Sucesso:** deletar `~/Projects/Leve_saude` manualmente → restart
-  → Leve vira `needs_setup=true`; StatusBar mostra `pid` real.
+- **Sucesso:** deletar path de um workspace manualmente → restart
+  → workspace vira `needs_setup=true`; StatusBar mostra `pid` real.
 - **Deps:** Tasks 3, 9.
 - **Estimativa:** **S (1-2h)**.
 - **Risco:** baixo.
