@@ -20,7 +20,7 @@ export function SidebarFooter({ onSettingsSaved }: SidebarFooterProps): React.JS
           <HelpCircle size={16} strokeWidth={1.75} />
         </IconButton>
       </div>
-      <span className="font-mono text-[10px] text-op-zinc-600">v0.3.0-beta.5</span>
+      <span className="font-mono text-[10px] text-op-zinc-600">v0.3.0-beta.6</span>
 
       {isSettingsOpen && (
         <SettingsDialog onSaved={onSettingsSaved} onClose={() => setIsSettingsOpen(false)} />
