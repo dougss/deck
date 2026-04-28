@@ -3,12 +3,13 @@ import { StatusDot, type StatusDotVariant } from '@/components/ui/StatusDot'
 import { formatRelativeTime } from '@/lib/time'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { useDeckStore } from '@/stores/deck'
-import type { Session } from '../../../../shared/ipc'
+import type { EditorPreset, Session } from '../../../../shared/ipc'
 import { SessionContextMenu } from './SessionContextMenu'
 
 interface SessionItemProps {
   session: Session
   isActive: boolean
+  customEditorCommand: string | null
   onClick: () => void
   onStop: () => void
   onDelete: () => void
@@ -17,6 +18,7 @@ interface SessionItemProps {
 export function SessionItem({
   session,
   isActive,
+  customEditorCommand,
   onClick,
   onStop,
   onDelete
@@ -67,13 +69,19 @@ export function SessionItem({
     }
   }
 
+  function handleOpenInEditor(editor: EditorPreset): void {
+    void window.deck.system.openInEditor({ workspacePath: session.cwd, editor })
+  }
+
   const isEditing = nameEdit.isEditing || subTextEdit.isEditing
 
   return (
     <SessionContextMenu
       session={session}
+      customEditorCommand={customEditorCommand}
       onRename={nameEdit.startEdit}
       onEditDescription={subTextEdit.startEdit}
+      onOpenInEditor={handleOpenInEditor}
       onStop={onStop}
       onDelete={onDelete}
     >

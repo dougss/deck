@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Plus } from 'lucide-react'
-import type { EditorPreset, Session, Workspace } from '../../../../shared/ipc'
+import type { Session, Workspace } from '../../../../shared/ipc'
 import {
   useSessionsByWorkspace,
   useIsWorkspaceExpanded,
@@ -16,7 +16,6 @@ interface WorkspaceGroupProps {
   workspace: Workspace
   customEditorCommand: string | null
   onEdit: (ws: Workspace) => void
-  onOpenInEditor: (ws: Workspace, editor: EditorPreset) => void
   onDelete: (ws: Workspace) => void
   onNewSession: (ws: Workspace) => void
   onDeleteSession: (session: Session) => void
@@ -26,7 +25,6 @@ export function WorkspaceGroup({
   workspace,
   customEditorCommand,
   onEdit,
-  onOpenInEditor,
   onDelete,
   onNewSession,
   onDeleteSession
@@ -60,13 +58,7 @@ export function WorkspaceGroup({
 
   return (
     <div className="px-2 mb-0.5">
-      <WorkspaceContextMenu
-        workspace={workspace}
-        customEditorCommand={customEditorCommand}
-        onEdit={() => onEdit(workspace)}
-        onOpenInEditor={(editor) => onOpenInEditor(workspace, editor)}
-        onDelete={() => onDelete(workspace)}
-      >
+      <WorkspaceContextMenu onEdit={() => onEdit(workspace)} onDelete={() => onDelete(workspace)}>
         <WorkspaceRow
           workspace={workspace}
           isExpanded={isExpanded}
@@ -82,6 +74,7 @@ export function WorkspaceGroup({
               key={session.id}
               session={session}
               isActive={activeSessionId === session.id}
+              customEditorCommand={customEditorCommand}
               onClick={() => handleSessionClick(session)}
               onStop={() => handleStop(session)}
               onDelete={() => onDeleteSession(session)}

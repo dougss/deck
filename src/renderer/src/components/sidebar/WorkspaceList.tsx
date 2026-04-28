@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import { useWorkspaces, useSessions, useSearchQuery } from '@/stores/deck'
-import type { DeckSettings, EditorPreset, Session, Workspace } from '../../../../shared/ipc'
+import type { DeckSettings, Session, Workspace } from '../../../../shared/ipc'
 import { WorkspaceGroup } from './WorkspaceGroup'
 import { WorkspaceDialog } from './WorkspaceDialog'
 import { DeleteWorkspaceDialog } from './DeleteWorkspaceDialog'
@@ -35,10 +35,6 @@ export function WorkspaceList({ settings }: WorkspaceListProps): React.JSX.Eleme
     [allSessions, deleteTarget]
   )
 
-  const handleOpenInEditor = useCallback((ws: Workspace, editor: EditorPreset): void => {
-    void window.deck.system.openInEditor({ workspacePath: ws.path, editor })
-  }, [])
-
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0">
@@ -62,7 +58,6 @@ export function WorkspaceList({ settings }: WorkspaceListProps): React.JSX.Eleme
               workspace={ws}
               customEditorCommand={settings?.customEditorCommand ?? null}
               onEdit={setEditTarget}
-              onOpenInEditor={handleOpenInEditor}
               onDelete={setDeleteTarget}
               onNewSession={setSessionCreateWs}
               onDeleteSession={setSessionDeleteTarget}
