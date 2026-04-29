@@ -2,6 +2,7 @@ appId: com.deck.app
 productName: Deck
 directories:
   buildResources: build
+  output: dist
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -19,15 +20,25 @@ nsis:
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch: [x64]
+    - target: zip
+      arch: [x64]
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  hardenedRuntime: false
+  gatekeeperAssess: false
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  title: ${productName}
+  sign: false
+  artifactName: ${productName}-${version}.${ext}
 linux:
   target:
     - AppImage

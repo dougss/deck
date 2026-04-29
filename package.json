@@ -74,40 +74,6 @@
     "typescript": "^5.9.3",
     "vite": "^7.2.6"
   },
-  "build": {
-    "appId": "com.deck.app",
-    "productName": "Deck",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "out/**/*",
-      "package.json"
-    ],
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "hardenedRuntime": false,
-      "gatekeeperAssess": false
-    },
-    "dmg": {
-      "title": "${productName}",
-      "sign": false
-    }
-  },
   "pnpm": {
     "onlyBuiltDependencies": [
       "better-sqlite3",

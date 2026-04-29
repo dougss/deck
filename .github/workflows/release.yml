@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Validate tag matches package.json version
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag $TAG_VERSION != package.json $PKG_VERSION"
+            exit 1
+          fi
+
+      - run: pnpm typecheck
+
+      - name: Build .dmg (x64)
+        run: pnpm build:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Verify artifacts
+        run: |
+          ls -lh dist/
+          VERSION="${GITHUB_REF_NAME#v}"
+          test -f "dist/Deck-${VERSION}.dmg"
+          test -f "dist/Deck-${VERSION}-mac.zip"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          generate_release_notes: false
+          fail_on_unmatched_files: true
+          files: |
+            dist/Deck-*.dmg
+            dist/Deck-*-mac.zip
+            dist/latest-mac.yml
+            dist/*.blockmap
