@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build-mac:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -35,11 +35,19 @@ jobs:
 
       - run: pnpm typecheck
 
+      - name: Rebuild native modules for x64
+        run: pnpm rebuild --config.arch=x64
+        env:
+          npm_config_arch: x64
+
       - name: Build .dmg (x64)
         run: pnpm build:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          npm_config_arch: x64
+          npm_config_target_arch: x64
+          npm_config_target_platform: darwin
 
       - name: Verify artifacts
         run: |
