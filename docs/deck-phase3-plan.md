@@ -351,9 +351,9 @@ Migration runner em `src/main/database.ts` detecta `user_version=1`, roda ALTER,
 **Lessons learned (2026-04-29):**
 
 - `--session-id <uuid>` é single-use: cria sessão CC com UUID específico, mas marca como "in use" permanentemente — não pode ser reutilizado para retomar (mesmo após deletar `.jsonl`).
-- Re-attach usa `--resume <uuid>`. Solução final: `command` no DB armazena sempre `--session-id <uuid>` (imutável). Em `attach()`, `fs.existsSync` verifica se `.jsonl` existe em `~/.claude/projects/<encoded-cwd>/`. Se existe → `--resume`; se não → `--session-id`. Flag decidida dinamicamente, zero mutação de DB.
-- Path encoding do CC: `fs.realpathSync(cwd).replace(/\//g, '-')`. `realpathSync` obrigatório — macOS resolve symlinks (`/tmp` → `/private/tmp`) antes de encodar.
-- Edge case (CC crash antes de gravar `.jsonl`): re-attach tenta `--session-id` com UUID queimado → error no terminal. Workaround manual: Stop + delete planner + recreate. Aceito Phase 1.
+- Re-attach original usava `--resume <uuid>`. **Descartado após daily drive:** `/clear` no CC limpa contexto em memória mas NÃO toca o `.jsonl` em disco. `--resume` recarregava o arquivo completo desde a primeira mensagem — Douglas via conversa de testes inicial ("Test greetings in Portuguese") ao reabrir o app.
+- **Solução final (fix pós-T3):** cada `attach()` de planner gera novo UUID via `randomUUID()`, atualiza `claude_session_id` e `command` no DB, spawna com `--session-id <novo>`. Stop + Reattach = sempre fresh. Workspace switch preserva PTY e buffer (não chama `attach()`). Orphan `.jsonl` acumulam no disco do CC (~1–10KB cada) — scale insignificante.
+- Edge case original (CC crash antes de gravar `.jsonl`) não se aplica mais — cada attach é sempre `--session-id`, nunca `--resume`.
 - Planner cwd é snapshot do `activeSession.cwd` no momento da criação — não re-sincroniza.
 - `PlannerSessionTerminal.tsx` não foi necessário — `SessionTerminal` existente funciona sem modificação.
 - `TerminalHost` tinha bug latente: sem filtro `kind === 'executor'`, planners attached criariam ghost terminals invisíveis na main area.

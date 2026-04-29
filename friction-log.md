@@ -83,6 +83,15 @@ Raw observations during real use. Input for future task prioritization.
 - **2026-04-29 06:50** — Tem algum problema com o FOCO do projeto... quando estou em outro app e clico em uma parte específica do app (Ex: no input do claude central) mas o foco anterior era no terminal, o foco CONTINUA no terminal e preciso clicar outra vez para alternar o foco.
 - **2026-04-29 08:00** — No Planner, poderíamos ter uma configuração específica para cada sessão/workspace ter seu próprio prompt e permissões (eu criei muito para MEU cenário, mas outras pessoas podem querer adaptar para o seu próprio)
 
+- **2026-04-29** — Planner reattach voltava pra conversa antiga após /clear + restart
+  - Context: fez /clear no planner, fechou e reabriu Deck
+  - Needed: conversa fresh ao reabrir
+  - Friction: --resume recarregava .jsonl inteiro desde primeira mensagem (incluindo testes iniciais do T3 "Test greetings in Portuguese")
+  - Root cause: /clear no CC limpa memória mas não toca .jsonl em disco; Deck usava --resume quando .jsonl existia
+  - Fix: cada attach() gera novo UUID, spawna com --session-id (nunca --resume). Stop+Reattach = sempre fresh. Workspace switch preserva PTY (não chama attach)
+  - Tradeoff aceito: orphan .jsonl acumulam no disco CC (~1-10KB cada, scale insignificante)
+  - Status: ✅ FIXED
+
 - **2026-04-29** — T5 Copy/Export modal implementado e cancelado
   - Context: T5 previa modal com textarea mostrando conversa inteira do planner
   - Needed: forma de copiar saída do planner pro executor

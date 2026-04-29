@@ -1,8 +1,5 @@
 import { EventEmitter } from 'node:events'
 import { randomUUID } from 'node:crypto'
-import fs from 'node:fs'
-import path from 'node:path'
-import os from 'node:os'
 import type { Database } from 'better-sqlite3'
 import { PLANNER_SYSTEM_PROMPT } from '../shared/planner-prompt'
 import type { PtyRegistry } from './pty-registry'
@@ -270,20 +267,16 @@ export class SessionManager extends EventEmitter<EventMap> {
       'eval "$(command -v direnv >/dev/null 2>&1 && direnv export zsh 2>/dev/null)";'
 
     let spawnCommand = current.command
-    if (current.kind === 'planner' && current.claudeSessionId) {
-      const realCwd = fs.realpathSync(current.cwd)
-      const encoded = realCwd.replace(/\//g, '-')
-      const convPath = path.join(
-        os.homedir(),
-        '.claude',
-        'projects',
-        encoded,
-        `${current.claudeSessionId}.jsonl`
+    if (current.kind === 'planner') {
+      const newSessionId = randomUUID()
+      const newCommand = current.command.replace(
+        /--(?:session-id|resume)\s+\S+/,
+        `--session-id ${newSessionId}`
       )
-      const sessionFlag = fs.existsSync(convPath)
-        ? `--resume ${current.claudeSessionId}`
-        : `--session-id ${current.claudeSessionId}`
-      spawnCommand = current.command.replace(/--(?:session-id|resume)\s+\S+/, sessionFlag)
+      this.db
+        .prepare(`UPDATE sessions SET claude_session_id = ?, command = ? WHERE id = ?`)
+        .run(newSessionId, newCommand, id)
+      spawnCommand = newCommand
     }
 
     const spawnArgs =
