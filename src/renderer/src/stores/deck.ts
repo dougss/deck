@@ -83,6 +83,16 @@ const expandAll = (ws: Workspace[]): ExpandedMap => {
 
 let subscribeDispose: (() => void) | null = null
 
+const RIGHT_PANEL_PINNED_KEY = 'deck:rightPanelPinned'
+
+function loadRightPanelPinned(): boolean {
+  try {
+    return localStorage.getItem(RIGHT_PANEL_PINNED_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
 export const useDeckStore = create<DeckState>()(
   devtools(
     (set) => ({
@@ -101,7 +111,7 @@ export const useDeckStore = create<DeckState>()(
 
       activeRightPanel: null,
       lastActiveRightPanel: 'terminal' as RightPanelMode,
-      rightPanelPinned: false,
+      rightPanelPinned: loadRightPanelPinned(),
 
       notificationStates: {},
 
@@ -298,8 +308,14 @@ export const useDeckStore = create<DeckState>()(
           'ui/toggleRightPanel'
         ),
 
-      setRightPanelPinned: (pinned) =>
-        set({ rightPanelPinned: pinned }, false, 'ui/setRightPanelPinned'),
+      setRightPanelPinned: (pinned) => {
+        try {
+          localStorage.setItem(RIGHT_PANEL_PINNED_KEY, String(pinned))
+        } catch {
+          // ignore storage errors (private mode, quota)
+        }
+        set({ rightPanelPinned: pinned }, false, 'ui/setRightPanelPinned')
+      },
 
       setNotificationState: (sessionId, state) =>
         set(
