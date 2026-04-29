@@ -66,6 +66,7 @@ interface DeckState {
   setGitInfo: (sessionId: SessionId, info: GitInfo) => void
   clearGitInfo: (sessionId: SessionId) => void
   triggerOpenBranchSwitcher: () => void
+  createPlanner: () => Promise<void>
 }
 
 const sortWorkspaces = (ws: Workspace[]): Workspace[] =>
@@ -335,7 +336,29 @@ export const useDeckStore = create<DeckState>()(
           (s) => ({ openBranchSwitcherTick: s.openBranchSwitcherTick + 1 }),
           false,
           'ui/openBranchSwitcher'
-        )
+        ),
+
+      createPlanner: async (): Promise<void> => {
+        const { workspaces, sessions, activeSessionId } = useDeckStore.getState()
+        const activeSession = activeSessionId
+          ? sessions.find((x) => x.id === activeSessionId)
+          : null
+        if (!activeSession || activeSession.kind !== 'executor') return
+        const workspace = workspaces.find((w) => w.id === activeSession.workspaceId)
+        if (!workspace || workspace.needsSetup) return
+        const session = await window.deck.session.create({
+          workspaceId: activeSession.workspaceId,
+          name: 'Planner',
+          cwd: activeSession.cwd,
+          command: '',
+          kind: 'planner',
+          type: 'claude-code',
+          parentSessionId: activeSession.id
+        })
+        window.deck.session.attach({ id: session.id }).catch((err) => {
+          console.error('[deck store] planner auto-attach failed:', err)
+        })
+      }
     }),
     { name: 'deck', enabled: import.meta.env.DEV }
   )
@@ -373,6 +396,14 @@ export const useActiveWorkspace = (): Workspace | null =>
 
 export const useGitInfo = (sessionId: SessionId): GitInfo | null =>
   useDeckStore((s) => s.gitInfoMap[sessionId] ?? null)
+
+export const useActivePlannerSession = (): Session | null =>
+  useDeckStore((s) =>
+    s.activeSessionId
+      ? (s.sessions.find((x) => x.parentSessionId === s.activeSessionId && x.kind === 'planner') ??
+        null)
+      : null
+  )
 
 if (import.meta.env.DEV) {
   // @ts-expect-error intentional dev-only global for debugging

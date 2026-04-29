@@ -1,6 +1,10 @@
 import { EventEmitter } from 'node:events'
 import { randomUUID } from 'node:crypto'
+import fs from 'node:fs'
+import path from 'node:path'
+import os from 'node:os'
 import type { Database } from 'better-sqlite3'
+import { PLANNER_SYSTEM_PROMPT } from '../shared/planner-prompt'
 import type { PtyRegistry } from './pty-registry'
 import type { PtyManager } from './pty-manager'
 import type {
@@ -29,6 +33,8 @@ interface SessionRow {
   status: string
   kind: string
   type: string
+  claude_session_id: string | null
+  parent_session_id: string | null
   created_at: number
   last_active_at: number
 }
@@ -108,6 +114,8 @@ export class SessionManager extends EventEmitter<EventMap> {
       status: toStatus(row.status),
       kind: (row.kind === 'planner' ? 'planner' : 'executor') as Session['kind'],
       type: (row.type === 'shell' ? 'shell' : 'claude-code') as SessionType,
+      claudeSessionId: row.claude_session_id ?? null,
+      parentSessionId: row.parent_session_id ?? null,
       createdAt: row.created_at,
       lastActiveAt: row.last_active_at,
       ptyId: record?.ptyId ?? null,
@@ -136,26 +144,64 @@ export class SessionManager extends EventEmitter<EventMap> {
     const name = validateNonEmpty('name', req.name)
     const cwd = validateNonEmpty('cwd', req.cwd)
     const type: SessionType = req.type === 'shell' ? 'shell' : 'claude-code'
-    const command =
-      type === 'shell' ? (req.command ?? '') : validateNonEmpty('command', req.command)
     const subText = req.subText ?? ''
+    const kind = req.kind ?? 'executor'
 
     const workspaceRow = this.db
       .prepare<[string], { id: string }>(`SELECT id FROM workspaces WHERE id = ?`)
       .get(req.workspaceId)
     if (!workspaceRow) throw new Error(`Workspace not found: ${req.workspaceId}`)
 
-    const kind = req.kind ?? 'executor'
+    let command: string
+    let claudeSessionId: string | null = null
+
+    let parentSessionId: string | null = null
+
+    if (kind === 'planner') {
+      if (!req.parentSessionId) throw new Error('parentSessionId is required for planner sessions')
+      parentSessionId = req.parentSessionId
+
+      const existing = this.db
+        .prepare<
+          [string],
+          { c: number }
+        >(`SELECT COUNT(*) as c FROM sessions WHERE parent_session_id = ? AND kind = 'planner'`)
+        .get(parentSessionId)
+      if (existing && existing.c > 0) throw new Error('Session already has a planner')
+
+      claudeSessionId = randomUUID()
+      const promptInline = PLANNER_SYSTEM_PROMPT.split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .join(' ')
+      command = `claude --session-id ${claudeSessionId} --disallowedTools Bash Edit Write --append-system-prompt "${promptInline}"`
+    } else {
+      command = type === 'shell' ? (req.command ?? '') : validateNonEmpty('command', req.command)
+    }
+
     const id = randomUUID()
     const now = Date.now()
 
     this.db
       .prepare(
         `INSERT INTO sessions
-          (id, workspace_id, name, cwd, command, sub_text, status, kind, type, created_at, last_active_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'idle', ?, ?, ?, ?)`
+          (id, workspace_id, name, cwd, command, sub_text, status, kind, type, claude_session_id, parent_session_id, created_at, last_active_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'idle', ?, ?, ?, ?, ?, ?)`
       )
-      .run(id, req.workspaceId, name, cwd, command, subText, kind, type, now, now)
+      .run(
+        id,
+        req.workspaceId,
+        name,
+        cwd,
+        command,
+        subText,
+        kind,
+        type,
+        claudeSessionId,
+        parentSessionId,
+        now,
+        now
+      )
 
     const session = this.get(id)!
     this.emit('updated', { type: 'created', session })
@@ -222,8 +268,26 @@ export class SessionManager extends EventEmitter<EventMap> {
 
     const direnvPrefix =
       'eval "$(command -v direnv >/dev/null 2>&1 && direnv export zsh 2>/dev/null)";'
+
+    let spawnCommand = current.command
+    if (current.kind === 'planner' && current.claudeSessionId) {
+      const realCwd = fs.realpathSync(current.cwd)
+      const encoded = realCwd.replace(/\//g, '-')
+      const convPath = path.join(
+        os.homedir(),
+        '.claude',
+        'projects',
+        encoded,
+        `${current.claudeSessionId}.jsonl`
+      )
+      const sessionFlag = fs.existsSync(convPath)
+        ? `--resume ${current.claudeSessionId}`
+        : `--session-id ${current.claudeSessionId}`
+      spawnCommand = current.command.replace(/--(?:session-id|resume)\s+\S+/, sessionFlag)
+    }
+
     const spawnArgs =
-      current.type === 'shell' ? ['-il'] : ['-ilc', `${direnvPrefix} ${current.command}`]
+      current.type === 'shell' ? ['-il'] : ['-ilc', `${direnvPrefix} ${spawnCommand}`]
     const { id: ptyId, manager } = this.ptyRegistry.create({
       cwd: current.cwd,
       cols,

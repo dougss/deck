@@ -5,7 +5,11 @@ import { SessionTerminal } from './SessionTerminal'
 
 export function TerminalHost(): React.JSX.Element {
   const attached = useDeckStore(
-    useShallow((s) => s.sessions.filter((x): x is Session & { ptyId: string } => x.ptyId !== null))
+    useShallow((s) =>
+      s.sessions.filter(
+        (x): x is Session & { ptyId: string } => x.ptyId !== null && x.kind === 'executor'
+      )
+    )
   )
   const activeId = useActiveSessionId()
 

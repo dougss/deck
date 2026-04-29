@@ -80,6 +80,17 @@ Raw observations during real use. Input for future task prioritization.
 - **2026-04-24 09:00** — Projetos DENTRO da pasta Leve_saude não estão injetando o .env, só injeta corretamente se iniciar o claude na raiz. Quero que funcione em qualquer diretório DENTRO da pasta Leve_saude.
   - Status: ✅ RESOLVED in v0.3.0-beta.3 — direnv inject no spawn: busca .envrc ancestral; workspaces sem .envrc usam config padrão (zero regression)
 
+- **2026-04-29 06:50** — Tem algum problema com o FOCO do projeto... quando estou em outro app e clico em uma parte específica do app (Ex: no input do claude central) mas o foco anterior era no terminal, o foco CONTINUA no terminal e preciso clicar outra vez para alternar o foco.
+- **2026-04-29 08:00** — No Planner, poderíamos ter uma configuração específica para cada sessão/workspace ter seu próprio prompt e permissões (eu criei muito para MEU cenário, mas outras pessoas podem querer adaptar para o seu próprio)
+
+- **2026-04-29** — T5 Copy/Export modal implementado e cancelado
+  - Context: T5 previa modal com textarea mostrando conversa inteira do planner
+  - Needed: forma de copiar saída do planner pro executor
+  - Friction: modal com conversa inteira não é prático — too much noise, difícil selecionar a parte relevante
+  - Lição: selecionar texto direto no xterm resolve melhor; features de polish precisam daily drive ANTES de implementar
+  - Severity: N/A — feature cancelada antes de ser adotada
+  - Status: ❌ CANCELLED — código removido, nenhum commit gerado
+
 ## Limitações conhecidas
 
 ### Hook broadcast por workspace

@@ -177,6 +177,8 @@ export interface Session {
   status: SessionStatus
   kind: 'executor' | 'planner'
   type: SessionType
+  claudeSessionId: string | null
+  parentSessionId: string | null
   createdAt: number
   lastActiveAt: number
   ptyId: PtyId | null
@@ -191,6 +193,7 @@ export interface SessionCreateRequest {
   subText?: string
   kind?: 'executor' | 'planner'
   type?: SessionType
+  parentSessionId?: string
 }
 
 export type SessionPatch = Partial<Pick<Session, 'name' | 'cwd' | 'command' | 'subText'>>

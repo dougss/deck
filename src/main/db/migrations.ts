@@ -24,6 +24,22 @@ const migrations: Migration[] = [
     up: (db): void => {
       db.exec(`ALTER TABLE sessions ADD COLUMN type TEXT NOT NULL DEFAULT 'claude-code'`)
     }
+  },
+  {
+    version: 4,
+    up: (db): void => {
+      db.exec(`ALTER TABLE sessions ADD COLUMN claude_session_id TEXT`)
+    }
+  },
+  {
+    version: 5,
+    up: (db): void => {
+      db.exec(`DELETE FROM sessions WHERE kind = 'planner'`)
+      db.exec(
+        `ALTER TABLE sessions ADD COLUMN parent_session_id TEXT REFERENCES sessions(id) ON DELETE CASCADE`
+      )
+      db.exec(`CREATE INDEX idx_sessions_parent ON sessions(parent_session_id)`)
+    }
   }
 ]
 

@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { useDeckStore } from '@/stores/deck'
+import { useDeckStore, useActivePlannerSession } from '@/stores/deck'
 import { PanelHeader } from './PanelHeader'
 import { PlannerEmptyState } from './PlannerEmptyState'
+import { PlannerHeader } from './PlannerHeader'
+import { PlannerTerminalHost, PlannerIdleOverlay } from './PlannerTerminalHost'
 import { UtilityTerminal } from './UtilityTerminal'
+import type { Session } from '../../../../shared/ipc'
 
 function basename(filePath: string): string {
   return filePath.replace(/\\/g, '/').split('/').filter(Boolean).pop() ?? filePath
@@ -15,6 +18,7 @@ function shellName(shellPath: string): string {
 export function RightPanel(): React.JSX.Element {
   const activePanel = useDeckStore((s) => s.activeRightPanel)
   const pinned = useDeckStore((s) => s.rightPanelPinned)
+  const plannerSession = useActivePlannerSession()
 
   const [spawnedCwd, setSpawnedCwd] = useState('')
   const [pid, setPid] = useState<number | null>(null)
@@ -38,12 +42,16 @@ export function RightPanel(): React.JSX.Element {
 
   const isPanelOpen = activePanel !== null
   const isOverlay = !pinned
-
   const terminalContext = spawnedCwd ? basename(spawnedCwd) : ''
-  const activeWorkspaceName = useDeckStore((s) => {
-    const sess = s.activeSessionId ? s.sessions.find((x) => x.id === s.activeSessionId) : null
-    return sess ? (s.workspaces.find((w) => w.id === sess.workspaceId)?.name ?? '') : ''
-  })
+  const attachedPlanner =
+    plannerSession?.ptyId != null ? (plannerSession as Session & { ptyId: string }) : null
+
+  const handleStopPlanner = (): void => {
+    if (!plannerSession) return
+    window.deck.session.detach({ id: plannerSession.id }).catch((err) => {
+      console.error('[RightPanel] planner stop failed:', err)
+    })
+  }
 
   return (
     <div
@@ -56,7 +64,11 @@ export function RightPanel(): React.JSX.Element {
       }}
     >
       {activePanel === 'planner' ? (
-        <PanelHeader title="Planner" context={activeWorkspaceName || undefined} statusOn={false} />
+        plannerSession ? (
+          <PlannerHeader planner={plannerSession} onStop={handleStopPlanner} />
+        ) : (
+          <PanelHeader title="Planner" statusOn={false} />
+        )
       ) : (
         <PanelHeader
           title="Terminal"
@@ -76,7 +88,16 @@ export function RightPanel(): React.JSX.Element {
           className="absolute inset-0 flex flex-col"
           style={{ display: activePanel === 'planner' ? 'flex' : 'none' }}
         >
-          <PlannerEmptyState />
+          <PlannerTerminalHost activePlannerId={attachedPlanner?.id ?? null} />
+          {!attachedPlanner && (
+            <div className="absolute inset-0">
+              {plannerSession ? (
+                <PlannerIdleOverlay planner={plannerSession} />
+              ) : (
+                <PlannerEmptyState />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Utility terminal — mounts once, never unmounts after first open */}
