@@ -17,7 +17,7 @@ Run multiple Claude Code sessions in parallel, organized by workspace and git br
 
 ## Screenshot
 
-<!-- ![Deck main interface](docs/screenshots/main-interface.png) -->
+![Deck main interface](docs/screenshots/main-interface.png)
 
 > _Screenshot pending — add `docs/screenshots/main-interface.png` before publishing._
 
