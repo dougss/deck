@@ -12,12 +12,54 @@ import {
 } from '@/components/ui/Dialog'
 
 const PRESET_COLORS = [
+  { label: 'Red', value: '#ef4444' },
+  { label: 'Orange', value: '#f97316' },
+  { label: 'Amber', value: '#f59e0b' },
+  { label: 'Lime', value: '#84cc16' },
+  { label: 'Emerald', value: '#10b981' },
+  { label: 'Teal', value: '#14b8a6' },
   { label: 'Cyan', value: '#06b6d4' },
+  { label: 'Sky', value: '#0ea5e9' },
+  { label: 'Indigo', value: '#6366f1' },
+  { label: 'Violet', value: '#8b5cf6' },
   { label: 'Pink', value: '#ec4899' },
-  { label: 'Violet', value: '#8b5cf6' }
+  { label: 'Rose', value: '#f43f5e' }
 ] as const
 
 const HEX6 = /^#[0-9a-fA-F]{6}$/
+const RECENT_KEY = 'deck:recentColors'
+const RECENT_MAX = 5
+const PRESET_SET = new Set<string>(PRESET_COLORS.map((p) => p.value))
+
+function loadRecent(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed)
+      ? parsed
+          .filter((c): c is string => typeof c === 'string' && HEX6.test(c))
+          .slice(0, RECENT_MAX)
+      : []
+  } catch {
+    return []
+  }
+}
+
+function pushRecent(color: string): string[] {
+  const normalized = color.toLowerCase()
+  if (PRESET_SET.has(normalized)) return loadRecent()
+  const current = loadRecent()
+  const next = [normalized, ...current.filter((c) => c.toLowerCase() !== normalized)].slice(
+    0,
+    RECENT_MAX
+  )
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next))
+  } catch {
+    /* ignore */
+  }
+  return next
+}
 
 interface WorkspaceDialogProps {
   mode: 'create' | 'edit'
@@ -34,6 +76,7 @@ export function WorkspaceDialog({
   const [path, setPath] = useState(workspace?.path ?? '')
   const [accentColor, setAccentColor] = useState(workspace?.accentColor ?? '#06b6d4')
   const [hexInput, setHexInput] = useState(workspace?.accentColor ?? '#06b6d4')
+  const [recent] = useState<string[]>(() => loadRecent())
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -48,7 +91,11 @@ export function WorkspaceDialog({
 
   function handleHexChange(v: string): void {
     setHexInput(v)
-    if (HEX6.test(v)) setAccentColor(v)
+    if (HEX6.test(v)) setAccentColor(v.toLowerCase())
+  }
+
+  function handleNativePicker(v: string): void {
+    setAccentColor(v.toLowerCase())
   }
 
   function validate(): string | null {
@@ -76,6 +123,7 @@ export function WorkspaceDialog({
           patch: { name: name.trim(), path: path.trim(), accentColor }
         })
       }
+      pushRecent(accentColor)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.')
@@ -139,25 +187,86 @@ export function WorkspaceDialog({
             </div>
 
             {/* Accent color */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               <label className="font-body text-[12px] font-medium text-op-zinc-400">Color</label>
+              <div className="grid grid-cols-6 gap-2">
+                {PRESET_COLORS.map(({ label, value }) => {
+                  const selected = accentColor.toLowerCase() === value
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      title={label}
+                      aria-label={label}
+                      aria-pressed={selected}
+                      onClick={() => setAccentColor(value)}
+                      className={[
+                        'w-7 h-7 rounded-full flex-shrink-0 transition-all duration-100',
+                        selected
+                          ? 'ring-2 ring-white ring-offset-2 ring-offset-op-surface-2 scale-110'
+                          : 'opacity-60 hover:opacity-100'
+                      ].join(' ')}
+                      style={{ backgroundColor: value }}
+                    />
+                  )
+                })}
+              </div>
+
+              {recent.length > 0 && (
+                <>
+                  <div className="h-px bg-op-zinc-800" />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-body text-[11px] text-op-zinc-500">Recent</span>
+                    {recent.map((c) => {
+                      const selected = accentColor.toLowerCase() === c
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          title={c}
+                          aria-label={`Recent color ${c}`}
+                          aria-pressed={selected}
+                          onClick={() => setAccentColor(c)}
+                          className={[
+                            'w-6 h-6 rounded-full flex-shrink-0 transition-all duration-100',
+                            selected
+                              ? 'ring-2 ring-white ring-offset-2 ring-offset-op-surface-2 scale-110'
+                              : 'opacity-70 hover:opacity-100'
+                          ].join(' ')}
+                          style={{ backgroundColor: c }}
+                        />
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+
+              <div className="h-px bg-op-zinc-800" />
+
               <div className="flex items-center gap-3">
-                {PRESET_COLORS.map(({ label, value }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    title={label}
-                    onClick={() => setAccentColor(value)}
-                    className={[
-                      'w-7 h-7 rounded-full flex-shrink-0 transition-all duration-100',
-                      accentColor === value
-                        ? 'ring-2 ring-white ring-offset-2 ring-offset-op-surface-2 scale-110'
-                        : 'opacity-60 hover:opacity-100'
-                    ].join(' ')}
-                    style={{ backgroundColor: value }}
+                <label
+                  className="flex items-center gap-1.5 h-7 px-2.5 bg-op-zinc-800 hover:bg-op-zinc-700 border border-op-zinc-700 rounded-[6px] cursor-pointer transition-colors duration-100"
+                  title="Pick a custom color"
+                >
+                  <span
+                    className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                    style={{
+                      background:
+                        'conic-gradient(from 0deg, #ef4444, #f59e0b, #84cc16, #06b6d4, #6366f1, #ec4899, #ef4444)'
+                    }}
                   />
-                ))}
-                <div className="flex items-center gap-1.5 ml-1">
+                  <span className="font-body text-[11px] font-medium text-op-zinc-300">
+                    Custom…
+                  </span>
+                  <input
+                    type="color"
+                    value={HEX6.test(accentColor) ? accentColor : '#06b6d4'}
+                    onChange={(e) => handleNativePicker(e.target.value)}
+                    className="sr-only"
+                  />
+                </label>
+
+                <div className="flex items-center gap-1.5">
                   <span
                     className="w-5 h-5 rounded-full flex-shrink-0 border border-op-zinc-700"
                     style={{ backgroundColor: HEX6.test(accentColor) ? accentColor : '#444' }}
@@ -168,6 +277,7 @@ export function WorkspaceDialog({
                     onChange={(e) => handleHexChange(e.target.value)}
                     placeholder="#06b6d4"
                     maxLength={7}
+                    aria-label="Hex color"
                     className="w-24 h-7 bg-op-zinc-900 border border-op-zinc-800 rounded-[5px] px-2 text-op-zinc-200 font-mono text-[12px] outline-none transition-[border-color] duration-100 placeholder:text-op-zinc-600 focus:border-accent"
                   />
                 </div>
