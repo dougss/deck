@@ -18,7 +18,7 @@ export function Sidebar(): React.JSX.Element {
   }, [refreshSettings])
 
   return (
-    <aside className="w-[280px] flex-shrink-0 bg-op-surface border-r border-op-border flex flex-col">
+    <aside className="w-full h-full bg-op-surface border-r border-op-border flex flex-col">
       <SidebarHeader />
       <SidebarSearch />
       <WorkspaceList settings={settings} />

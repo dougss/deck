@@ -47,7 +47,7 @@ export function RightPanel(): React.JSX.Element {
 
   return (
     <div
-      className="absolute top-0 bottom-8 right-12 w-[420px] bg-op-surface border-l border-op-border flex flex-col z-10"
+      className="w-full h-full bg-op-surface border-l border-op-border flex flex-col"
       style={{
         display: isPanelOpen ? 'flex' : 'none',
         boxShadow: isOverlay
