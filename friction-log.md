@@ -16,14 +16,13 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 ## Pendente
 
 - 2026-04-29 — Foco não alterna ao clicar em outro pane vindo de outro app (precisa 2 cliques)
-- 2026-04-29 — Sidebar resize/pinned não persiste após reabrir o app
-- 2026-04-29 — Sidebar mostra versão hardcoded ao invés de ler do package.json
 - 2026-04-29 — Header com tag "claude-levesaude" hardcoded; deveria ser o plano do Claude (ex: Team)
 - 2026-04-29 — Planner: prompt/permissions hardcoded para meu setup; outros usuários precisam customizar por session/workspace
 
 ## Em andamento
 
-(vazio)
+- 2026-04-29 — Sidebar versão hardcoded → [#27](https://github.com/dougss/deck/issues/27)
+- 2026-04-29 — Sidebar resize/pinned não persiste → [#28](https://github.com/dougss/deck/issues/28)
 
 ## Resolvido recente
 
