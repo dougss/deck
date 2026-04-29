@@ -27,7 +27,7 @@
     "postinstall": "electron-builder install-app-deps && node scripts/postinstall-chmod.js",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
-    "build:mac": "electron-vite build && electron-builder --mac",
+    "build:mac": "electron-vite build && electron-builder --mac --publish=never",
     "build:mac:dir": "electron-vite build && electron-builder --mac --dir",
     "build:linux": "electron-vite build && electron-builder --linux"
   },

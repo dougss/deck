@@ -64,5 +64,5 @@ jobs:
           files: |
             dist/Deck-*.dmg
             dist/Deck-*-mac.zip
-            dist/latest-mac.yml
+            dist/*-mac.yml
             dist/*.blockmap
