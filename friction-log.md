@@ -21,11 +21,12 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 
 ## Em andamento
 
-- 2026-04-29 — Sidebar versão hardcoded → [#27](https://github.com/dougss/deck/issues/27)
-- 2026-04-29 — Sidebar resize/pinned não persiste → [#28](https://github.com/dougss/deck/issues/28)
+(vazio)
 
 ## Resolvido recente
 
+- 2026-04-29 — Sidebar versão hardcoded → v0.4.2 ([#27](https://github.com/dougss/deck/issues/27))
+- 2026-04-29 — Right panel pinned state não persiste → v0.4.2 ([#28](https://github.com/dougss/deck/issues/28))
 - 2026-04-29 — Planner reattach voltava à conversa antiga após /clear → v0.4.1 (commit 552a6b5)
 - 2026-04-22 — Hook broadcast por workspace ao invés de session específica → v0.3.0-beta.5 (DECK_SESSION_ID)
 - 2026-04-22 — Branch switcher integrado no header → v0.3.0-beta.7
