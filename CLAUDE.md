@@ -86,16 +86,16 @@ SQLite via better-sqlite3, stored at `~/Library/Application Support/Deck/deck.db
 
 This project uses a deliberate **spec → plan → implement → validate → daily-drive** cycle:
 
-1. Issue or `docs/friction-log.md` entry describes the dor
+1. Issue or `friction-log.md` (raiz) entry describes the dor
 2. Investigation/inventory before code (decisions documented)
 3. Implementation (no E2E validation as a separate step)
 4. Manual E2E validation (Douglas runs scenarios)
 5. Commit only after validation passes
 6. Daily-drive in production before tagging a release
 
-Friction discovered during daily-drive goes into `docs/friction-log.md` before becoming an issue or spec.
+Friction discovered during daily-drive goes into `friction-log.md` (raiz) before becoming a GitHub issue.
 
-Phase plans live in `docs/deck-phase*.md`. Friction tracking in `docs/friction-log.md`.
+Phase plans live in `docs/deck-phase*.md`. Friction tracking in `friction-log.md` (raiz).
 
 ## Constraints
 
@@ -121,5 +121,5 @@ Phase plans live in `docs/deck-phase*.md`. Friction tracking in `docs/friction-l
 - Phase 3 plan: `docs/deck-phase3-plan.md`
 - Phase 3 validation: `docs/deck-phase3-validation.md`
 - Visual drift notes: `docs/deck-visual-drift.md`
-- Friction log: `docs/friction-log.md`
+- Friction log: `friction-log.md` (raiz)
 - Public README: `README.md`
