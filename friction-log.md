@@ -16,8 +16,6 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 ## Pendente
 
 - 2026-04-29 — Foco não alterna ao clicar em outro pane vindo de outro app (precisa 2 cliques)
-- 2026-04-29 — Header com tag "claude-levesaude" hardcoded; deveria ser o plano do Claude (ex: Team)
-- 2026-04-29 — Workspaces + sessions - Não gosto do fato de ficar reeordenando ao abrir uma nova sessão (isso quebra os atalhos também). Seria interessante ter visível o atanho para cada session cmd 1, cmd 2
 
 ## Em andamento
 
@@ -25,6 +23,8 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 
 ## Resolvido recente
 
+- 2026-04-29 — Header com tag hardcoded → v0.5.0 (plano do Claude dinâmico no SessionHeader)
+- 2026-04-29 — Workspaces/sessions reordenando ao abrir nova sessão + atalhos cmd+N visíveis → v0.5.0
 - 2026-04-29 — Planner: prompt/permissions hardcoded → v0.5.0 (workspace + global customization via PlannerSettingsDialog/WorkspaceDialog)
 - 2026-04-29 — Planner: spec drive para features → v0.5.0 (`docs/deck-specs/` com convention F4 spec output)
 - 2026-04-29 — Planner: aprimorar PROMPT → v0.5.0 (super prompt spec-driven 6 fases F1-F6, hard gate, challenge mandate)
