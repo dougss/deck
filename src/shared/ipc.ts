@@ -125,6 +125,9 @@ export interface Workspace {
   needsSetup: boolean
   ordinal: number
   createdAt: number
+  plannerPrompt: string | null
+  plannerDisallowedTools: string | null
+  plannerAllowedTools: string | null
 }
 
 export interface WorkspaceCreateRequest {
@@ -132,9 +135,23 @@ export interface WorkspaceCreateRequest {
   accentColor: string
   path: string
   ordinal?: number
+  plannerPrompt?: string | null
+  plannerDisallowedTools?: string | null
+  plannerAllowedTools?: string | null
 }
 
-export type WorkspacePatch = Partial<Pick<Workspace, 'name' | 'accentColor' | 'path' | 'ordinal'>>
+export type WorkspacePatch = Partial<
+  Pick<
+    Workspace,
+    | 'name'
+    | 'accentColor'
+    | 'path'
+    | 'ordinal'
+    | 'plannerPrompt'
+    | 'plannerDisallowedTools'
+    | 'plannerAllowedTools'
+  >
+>
 
 export interface WorkspaceUpdateRequest {
   id: WorkspaceId
@@ -251,6 +268,9 @@ export type EditorPreset = 'zed' | 'cursor' | 'vscode' | 'fork' | 'custom'
 export interface DeckSettings {
   customEditorCommand: string | null
   defaultExecutorCommand: string
+  plannerPrompt: string | null
+  plannerDisallowedTools: string | null
+  plannerAllowedTools: string | null
 }
 
 export interface OpenInEditorRequest {

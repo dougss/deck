@@ -60,7 +60,13 @@ export async function runSessionSmoke(): Promise<number> {
   const { db } = initDatabase(SMOKE_DB)
   const workspaceManager = new WorkspaceManager(db)
   const registry = new PtyRegistry()
-  const manager = new SessionManager(db, registry)
+  const manager = new SessionManager(db, registry, () => ({
+    customEditorCommand: null,
+    defaultExecutorCommand: 'claude',
+    plannerPrompt: null,
+    plannerDisallowedTools: null,
+    plannerAllowedTools: null
+  }))
 
   const events: SessionUpdateEvent[] = []
   manager.on('updated', (e) => events.push(e))
@@ -279,7 +285,13 @@ export async function runSessionSmoke(): Promise<number> {
     if (peek?.status !== 'working') throw new Error('precondition failed')
 
     const freshRegistry = new PtyRegistry()
-    const freshManager = new SessionManager(db, freshRegistry)
+    const freshManager = new SessionManager(db, freshRegistry, () => ({
+      customEditorCommand: null,
+      defaultExecutorCommand: 'claude',
+      plannerPrompt: null,
+      plannerDisallowedTools: null,
+      plannerAllowedTools: null
+    }))
     const after = freshManager.get(created.id)!
     if (after.status !== 'idle') throw new Error(`expected idle, got ${after.status}`)
     return `stale working → idle on boot`

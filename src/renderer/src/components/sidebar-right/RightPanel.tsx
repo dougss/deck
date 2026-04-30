@@ -3,6 +3,7 @@ import { useDeckStore, useActivePlannerSession } from '@/stores/deck'
 import { PanelHeader } from './PanelHeader'
 import { PlannerEmptyState } from './PlannerEmptyState'
 import { PlannerHeader } from './PlannerHeader'
+import { PlannerSettingsDialog } from './PlannerSettingsDialog'
 import { PlannerTerminalHost, PlannerIdleOverlay } from './PlannerTerminalHost'
 import { UtilityTerminal } from './UtilityTerminal'
 import type { Session } from '../../../../shared/ipc'
@@ -23,6 +24,7 @@ export function RightPanel(): React.JSX.Element {
   const [spawnedCwd, setSpawnedCwd] = useState('')
   const [pid, setPid] = useState<number | null>(null)
   const [resetKey, setResetKey] = useState(0)
+  const [plannerSettingsOpen, setPlannerSettingsOpen] = useState(false)
   const hasOpenedTerminalRef = useRef(false)
 
   // Capture cwd once on first terminal open (frozen at spawn)
@@ -62,11 +64,11 @@ export function RightPanel(): React.JSX.Element {
       }}
     >
       {activePanel === 'planner' ? (
-        plannerSession ? (
-          <PlannerHeader planner={plannerSession} onStop={handleStopPlanner} />
-        ) : (
-          <PanelHeader title="Planner" statusOn={false} />
-        )
+        <PlannerHeader
+          planner={plannerSession ?? null}
+          onStop={handleStopPlanner}
+          onOpenSettings={() => setPlannerSettingsOpen(true)}
+        />
       ) : (
         <PanelHeader
           title="Terminal"
@@ -117,6 +119,10 @@ export function RightPanel(): React.JSX.Element {
           </span>
           <span>global · stays alive until ⌘Q</span>
         </div>
+      )}
+
+      {plannerSettingsOpen && (
+        <PlannerSettingsDialog onClose={() => setPlannerSettingsOpen(false)} />
       )}
     </div>
   )

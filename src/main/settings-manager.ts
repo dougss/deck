@@ -5,7 +5,10 @@ import type { DeckSettings } from '../shared/ipc'
 
 const DEFAULT_SETTINGS: DeckSettings = {
   customEditorCommand: null,
-  defaultExecutorCommand: 'claude'
+  defaultExecutorCommand: 'claude',
+  plannerPrompt: null,
+  plannerDisallowedTools: null,
+  plannerAllowedTools: null
 }
 
 function getSettingsPath(): string {
@@ -15,6 +18,7 @@ function getSettingsPath(): string {
 export function getSettings(): DeckSettings {
   try {
     const raw = fs.readFileSync(getSettingsPath(), 'utf-8')
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { preferredEditor: _removed, ...clean } = JSON.parse(raw)
     return { ...DEFAULT_SETTINGS, ...clean }
   } catch {

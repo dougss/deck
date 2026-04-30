@@ -40,6 +40,14 @@ const migrations: Migration[] = [
       )
       db.exec(`CREATE INDEX idx_sessions_parent ON sessions(parent_session_id)`)
     }
+  },
+  {
+    version: 6,
+    up: (db): void => {
+      db.exec(`ALTER TABLE workspaces ADD COLUMN planner_prompt TEXT`)
+      db.exec(`ALTER TABLE workspaces ADD COLUMN planner_disallowed_tools TEXT`)
+      db.exec(`ALTER TABLE workspaces ADD COLUMN planner_allowed_tools TEXT`)
+    }
   }
 ]
 

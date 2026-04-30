@@ -3,6 +3,8 @@
 > Cockpit desktop para orquestrar múltiplas sessões de Claude Code paralelas.
 > Self-hosted desktop app, TypeScript end-to-end.
 
+> **Para o PLANNER:** as seções **Princípios**, **Não-objetivos** e **Stack decidida** abaixo são **imutáveis**. Qualquer plano que as contrarie deve ser sinalizado e barrado antes de chegar à F3 APPROVE. Mudanças nesses rails exigem uma spec dedicada de revisão da constitution.
+
 ---
 
 ## Por que existe

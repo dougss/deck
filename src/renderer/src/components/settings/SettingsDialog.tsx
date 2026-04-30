@@ -92,7 +92,7 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
                 className="h-9 bg-op-zinc-900 border border-op-zinc-800 rounded-[7px] px-3 text-op-zinc-200 font-mono text-[13px] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-op-zinc-600 focus:border-accent focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <p className="font-body text-[11px] text-op-zinc-500">
-                Binary name or path used for "Open in Custom". Workspace path is appended
+                Binary name or path used for &quot;Open in Custom&quot;. Workspace path is appended
                 automatically.
               </p>
             </div>

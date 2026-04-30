@@ -7,6 +7,7 @@ import type { PtyRegistry } from './pty-registry'
 import type { PtyManager } from './pty-manager'
 import type { PtyExitInfo } from './pty-manager'
 import type {
+  DeckSettings,
   PtyId,
   Session,
   SessionCreateRequest,
@@ -17,6 +18,10 @@ import type {
   SessionUpdateEvent,
   WorkspaceId
 } from '../shared/ipc'
+
+function shellQuote(s: string): string {
+  return `'${s.replace(/'/g, "'\\''")}'`
+}
 
 const ATTACH_DEFAULT_COLS = 80
 const ATTACH_DEFAULT_ROWS = 24
@@ -99,10 +104,39 @@ export class SessionManager extends EventEmitter<EventMap> {
 
   constructor(
     private readonly db: Database,
-    private readonly ptyRegistry: PtyRegistry
+    private readonly ptyRegistry: PtyRegistry,
+    private readonly getSettings: () => DeckSettings
   ) {
     super()
     this.resetStaleStatuses()
+  }
+
+  private resolvePlannerConfig(workspaceId: WorkspaceId): {
+    prompt: string
+    disallowedTools: string | null
+    allowedTools: string | null
+  } {
+    const wsRow = this.db
+      .prepare<
+        [string],
+        {
+          planner_prompt: string | null
+          planner_disallowed_tools: string | null
+          planner_allowed_tools: string | null
+        }
+      >(
+        `SELECT planner_prompt, planner_disallowed_tools, planner_allowed_tools FROM workspaces WHERE id = ?`
+      )
+      .get(workspaceId)
+    const settings = this.getSettings()
+    return {
+      prompt: wsRow?.planner_prompt ?? settings.plannerPrompt ?? PLANNER_SYSTEM_PROMPT,
+      disallowedTools:
+        wsRow?.planner_disallowed_tools ??
+        settings.plannerDisallowedTools ??
+        'Bash Edit Write MultiEdit NotebookEdit',
+      allowedTools: wsRow?.planner_allowed_tools ?? settings.plannerAllowedTools ?? null
+    }
   }
 
   private resetStaleStatuses(): void {
@@ -182,11 +216,16 @@ export class SessionManager extends EventEmitter<EventMap> {
       if (existing && existing.c > 0) throw new Error('Session already has a planner')
 
       claudeSessionId = randomUUID()
-      const promptInline = PLANNER_SYSTEM_PROMPT.split('\n')
-        .map((l) => l.trim())
-        .filter(Boolean)
-        .join(' ')
-      command = `claude --session-id ${claudeSessionId} --disallowedTools Bash Edit Write --append-system-prompt "${promptInline}"`
+      const config = this.resolvePlannerConfig(req.workspaceId)
+      const promptNormalized = config.prompt
+        .replace(/\n+/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+      const parts = [`claude`, `--session-id`, claudeSessionId]
+      if (config.disallowedTools) parts.push(`--disallowedTools`, config.disallowedTools)
+      if (config.allowedTools) parts.push(`--allowedTools`, config.allowedTools)
+      parts.push(`--append-system-prompt`, shellQuote(promptNormalized))
+      command = parts.join(' ')
     } else {
       command = type === 'shell' ? (req.command ?? '') : validateNonEmpty('command', req.command)
     }

@@ -3,16 +3,10 @@ import { ConfigBadge, IconButton, type ConfigBadgeVariant } from '@/components/u
 import { BranchSwitcher } from './BranchSwitcher'
 import type { SessionType } from '../../../../shared/ipc'
 
-function getConfigLabel(
-  workspaceName: string,
-  sessionType: SessionType
-): { label: string; variant: ConfigBadgeVariant } {
+function getConfigLabel(sessionType: SessionType): { label: string; variant: ConfigBadgeVariant } {
   if (sessionType === 'shell') return { label: 'shell', variant: 'neutral' }
   if (sessionType === 'ssh') return { label: 'ssh', variant: 'neutral' }
-  if (workspaceName.toLowerCase().includes('leve')) {
-    return { label: 'claude-levesaude', variant: 'cyan' }
-  }
-  return { label: 'claude-max', variant: 'violet' }
+  return { label: 'claude-code', variant: 'neutral' }
 }
 
 export function SessionHeader(): React.JSX.Element {
@@ -28,7 +22,7 @@ export function SessionHeader(): React.JSX.Element {
     )
   }
 
-  const { label, variant } = getConfigLabel(workspace.name, session.type)
+  const { label, variant } = getConfigLabel(session.type)
 
   return (
     <div className="h-[50px] flex-shrink-0 flex items-center justify-between px-5 gap-4 bg-op-surface-2 border-b border-op-border">

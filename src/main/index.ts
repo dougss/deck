@@ -15,6 +15,7 @@ import { registerSessionHandlers } from './ipc-handlers-sessions'
 import { runSessionSmoke } from './session-smoke'
 import { registerDialogHandlers } from './ipc-handlers-dialog'
 import { registerSettingsHandlers } from './ipc-handlers-settings'
+import { getSettings } from './settings-manager'
 import { registerSystemHandlers } from './ipc-handlers-system'
 import { buildApplicationMenu } from './menu'
 import { EventWatcher, DECK_DIR } from './event-watcher'
@@ -118,7 +119,7 @@ app.whenReady().then(async () => {
   const { db } = initDatabase(dbPath)
 
   const workspaceManager = new WorkspaceManager(db)
-  const sessionManager = new SessionManager(db, ptyRegistry)
+  const sessionManager = new SessionManager(db, ptyRegistry, getSettings)
   const gitManager = new GitManager()
   registerWorkspaceHandlers(workspaceManager, sessionManager, () => mainWindow)
   registerSessionHandlers(sessionManager, () => mainWindow)

@@ -116,6 +116,8 @@ Phase plans live in `docs/deck-phase*.md`. Friction tracking in `friction-log.md
 ## References
 
 - Constitution / principles: `docs/deck-constitution.md`
+- Planner super prompt + analysis: `docs/deck-planner-superprompt.md`
+- Planner specs (F4 output): `docs/deck-specs/` (convention in `docs/deck-specs/README.md`)
 - Phase 1 spec: `docs/deck-phase1-spec.md`
 - Phase 2 tasks: `docs/deck-phase2-tasks.md`
 - Phase 3 plan: `docs/deck-phase3-plan.md`
