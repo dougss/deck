@@ -66,17 +66,19 @@ export function AppBody({ children }: AppBodyProps): React.JSX.Element {
         {children}
       </div>
       <ActivityBar />
-      <ResizablePanel
-        side="right"
-        storageKey={RP_STORAGE_KEY}
-        defaultWidth={RP_DEFAULT}
-        minWidth={RP_MIN}
-        onWidthChange={handleRpWidthChange}
-        onWidthCommit={handleRpWidthCommit}
-        className="absolute top-0 bottom-8 right-12 z-10"
-      >
-        <RightPanel />
-      </ResizablePanel>
+      {activePanel !== null && (
+        <ResizablePanel
+          side="right"
+          storageKey={RP_STORAGE_KEY}
+          defaultWidth={RP_DEFAULT}
+          minWidth={RP_MIN}
+          onWidthChange={handleRpWidthChange}
+          onWidthCommit={handleRpWidthCommit}
+          className="absolute top-0 bottom-8 right-12 z-10"
+        >
+          <RightPanel />
+        </ResizablePanel>
+      )}
     </div>
   )
 }

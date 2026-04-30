@@ -40,7 +40,6 @@ export function RightPanel(): React.JSX.Element {
     }
   }, [activePanel])
 
-  const isPanelOpen = activePanel !== null
   const isOverlay = !pinned
   const terminalContext = spawnedCwd ? basename(spawnedCwd) : ''
   const attachedPlanner =
@@ -57,7 +56,6 @@ export function RightPanel(): React.JSX.Element {
     <div
       className="w-full h-full bg-op-surface border-l border-op-border flex flex-col"
       style={{
-        display: isPanelOpen ? 'flex' : 'none',
         boxShadow: isOverlay
           ? '-14px 0 36px -8px rgba(0,0,0,0.5), -2px 0 0 0 var(--op-border)'
           : 'none'
