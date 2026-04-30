@@ -17,12 +17,7 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 
 - 2026-04-29 — Foco não alterna ao clicar em outro pane vindo de outro app (precisa 2 cliques)
 - 2026-04-29 — Header com tag "claude-levesaude" hardcoded; deveria ser o plano do Claude (ex: Team)
-- 2026-04-29 — Planner: prompt/permissions hardcoded para meu setup; outros usuários precisam customizar por session/workspace
-- 2026-04-29 — Planner: Liberar para edição e salvar a spec das features dentro do projeto em questão (definir uma estrutura de spec drive)
-- 2026-04-29 — Planner: Aprimorar PROMPT para um PLANEJAMENTO MELHOR
-- 2026-04-29 — Resize right sidebar - Quando a sidebar esta fechada, se colocar o mouse no local que a sidebar estava aberta, é possível clicar na barra (ela aparece) e redimencionar (memso com a sidebar oculta)
 - 2026-04-29 — Workspaces + sessions - Não gosto do fato de ficar reeordenando ao abrir uma nova sessão (isso quebra os atalhos também). Seria interessante ter visível o atanho para cada session cmd 1, cmd 2
-- 
 
 ## Em andamento
 
@@ -30,6 +25,10 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 
 ## Resolvido recente
 
+- 2026-04-29 — Planner: prompt/permissions hardcoded → v0.5.0 (workspace + global customization via PlannerSettingsDialog/WorkspaceDialog)
+- 2026-04-29 — Planner: spec drive para features → v0.5.0 (`docs/deck-specs/` com convention F4 spec output)
+- 2026-04-29 — Planner: aprimorar PROMPT → v0.5.0 (super prompt spec-driven 6 fases F1-F6, hard gate, challenge mandate)
+- 2026-04-29 — Resize handle visível com sidebar fechada → v0.5.0 (commit bf19a91)
 - 2026-04-29 — Sidebar versão hardcoded → v0.4.2 ([#27](https://github.com/dougss/deck/issues/27))
 - 2026-04-29 — Right panel pinned state não persiste → v0.4.2 ([#28](https://github.com/dougss/deck/issues/28))
 - 2026-04-29 — Planner reattach voltava à conversa antiga após /clear → v0.4.1 (commit 552a6b5)
