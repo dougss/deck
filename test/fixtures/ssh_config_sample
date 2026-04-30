@@ -1,0 +1,22 @@
+# Sample SSH config — used by ssh:smoke test
+
+Host myserver
+    HostName 192.168.1.100
+    User admin
+    Port 2222
+
+Host devbox
+    HostName dev.example.com
+    User developer
+
+Host jump
+    HostName jump.example.com
+
+Host bastion prod-node-1 prod-node-2
+    User deploy
+    Port 22
+
+# Wildcard entries must be excluded from the selectable list
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 3

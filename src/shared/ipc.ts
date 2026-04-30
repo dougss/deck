@@ -2,7 +2,7 @@ export type PtyId = string
 export type WorkspaceId = string
 export type SessionId = string
 export type SessionStatus = 'idle' | 'working'
-export type SessionType = 'claude-code' | 'shell'
+export type SessionType = 'claude-code' | 'shell' | 'ssh'
 export type NotificationState = 'idle' | 'pending' | 'error'
 
 export interface GitInfo {
@@ -59,7 +59,8 @@ export const IPC = {
   GIT_STASH_CHECKOUT: 'git:stash-checkout',
   GIT_INFO_UPDATED: 'git:info-updated',
   SHORTCUT_BRANCH_SWITCHER: 'shortcut:branch-switcher',
-  SHORTCUT_COMMAND_PALETTE: 'shortcut:command-palette'
+  SHORTCUT_COMMAND_PALETTE: 'shortcut:command-palette',
+  SSH_LIST_HOSTS: 'ssh:list-hosts'
 } as const
 
 export interface PtySpawnRequest {
@@ -313,6 +314,17 @@ export interface DeckGitApi {
   onInfoUpdated(cb: (event: GitInfoUpdatedEvent) => void): () => void
 }
 
+export interface SshHost {
+  alias: string
+  hostname: string | null
+  user: string | null
+  port: number | null
+}
+
+export interface DeckSshApi {
+  listHosts(): Promise<SshHost[]>
+}
+
 export interface DeckShortcutsApi {
   onNewSession(cb: () => void): () => void
   onStopSession(cb: () => void): () => void
@@ -334,4 +346,5 @@ export interface DeckApi {
   system: DeckSystemApi
   hooks: DeckHooksApi
   git: DeckGitApi
+  ssh: DeckSshApi
 }

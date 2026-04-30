@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { FolderOpen, Bot, Terminal, ChevronDown } from 'lucide-react'
-import type { SessionType, Workspace } from '../../../../shared/ipc'
+import { useState, useEffect } from 'react'
+import { FolderOpen, Bot, Terminal, Server, ChevronDown } from 'lucide-react'
+import type { SessionType, SshHost, Workspace } from '../../../../shared/ipc'
 import { useDeckStore } from '@/stores/deck'
 import {
   Dialog,
@@ -16,12 +16,14 @@ const LAST_TYPE_KEY = 'deck:lastSessionType'
 
 function getLastType(): SessionType {
   const stored = localStorage.getItem(LAST_TYPE_KEY)
-  if (stored === 'shell' || stored === 'claude-code') return stored
+  if (stored === 'shell' || stored === 'claude-code' || stored === 'ssh') return stored
   return 'claude-code'
 }
 
-function autoName(workspace: Workspace, type: SessionType): string {
-  return type === 'shell' ? `${workspace.name}/shell` : `${workspace.name}/new-session`
+function autoName(workspace: Workspace, type: SessionType, sshAlias?: string): string {
+  if (type === 'shell') return `${workspace.name}/shell`
+  if (type === 'ssh') return `${workspace.name}/ssh:${sshAlias ?? ''}`
+  return `${workspace.name}/new-session`
 }
 
 interface SessionDialogProps {
@@ -45,7 +47,8 @@ export function SessionDialog({
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(initialWorkspace.id)
   const selectedWorkspace = workspaces.find((w) => w.id === selectedWorkspaceId) ?? initialWorkspace
 
-  const [name, setName] = useState(() => autoName(initialWorkspace, initialType ?? getLastType()))
+  // nameInput stores what the user explicitly typed; name is auto-derived when not dirty
+  const [nameInput, setNameInput] = useState('')
   const [nameDirty, setNameDirty] = useState(false)
   const [cwd, setCwd] = useState(initialWorkspace.path)
   const [cwdDirty, setCwdDirty] = useState(false)
@@ -54,9 +57,27 @@ export function SessionDialog({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [sshHosts, setSshHosts] = useState<SshHost[]>([])
+  const [sshAlias, setSshAlias] = useState('')
+
+  // Derived: auto-computed when not dirty, otherwise user-typed value
+  const name = nameDirty ? nameInput : autoName(selectedWorkspace, type, sshAlias)
+
+  // Fetch SSH hosts when the user switches to SSH mode
+  useEffect(() => {
+    if (type !== 'ssh') return
+    window.deck.ssh.listHosts().then((hosts) => {
+      setSshHosts(hosts)
+      if (hosts.length > 0) setSshAlias(hosts[0].alias)
+    })
+  }, [type])
+
   function handleTypeChange(newType: SessionType): void {
     setType(newType)
-    if (!nameDirty) setName(autoName(selectedWorkspace, newType))
+  }
+
+  function handleSshAliasChange(alias: string): void {
+    setSshAlias(alias)
   }
 
   function handleWorkspaceChange(wsId: string): void {
@@ -64,7 +85,6 @@ export function SessionDialog({
     if (!ws) return
     setSelectedWorkspaceId(wsId)
     if (!cwdDirty) setCwd(ws.path)
-    if (!nameDirty) setName(autoName(ws, type))
   }
 
   async function handlePickFolder(): Promise<void> {
@@ -78,8 +98,9 @@ export function SessionDialog({
   function validate(): string | null {
     if (!name.trim()) return 'Name is required.'
     if (name.trim().length > 60) return 'Name must be 60 characters or fewer.'
-    if (!cwd.trim()) return 'Working directory is required.'
+    if (type !== 'ssh' && !cwd.trim()) return 'Working directory is required.'
     if (type === 'claude-code' && !command.trim()) return 'Command is required.'
+    if (type === 'ssh' && !sshAlias) return 'Select a host.'
     return null
   }
 
@@ -97,8 +118,8 @@ export function SessionDialog({
       const session = await window.deck.session.create({
         workspaceId: selectedWorkspace.id,
         name: name.trim(),
-        cwd: cwd.trim(),
-        command: type === 'shell' ? '' : command.trim(),
+        cwd: type === 'ssh' ? selectedWorkspace.path : cwd.trim(),
+        command: type === 'shell' ? '' : type === 'ssh' ? sshAlias : command.trim(),
         subText: subText.trim(),
         type
       })
@@ -135,7 +156,25 @@ export function SessionDialog({
           <div className="px-6 pb-2 flex flex-col gap-4">
             {/* Type selector */}
             <div className="flex gap-2">
-              {(['claude-code', 'shell'] as SessionType[]).map((t) => (
+              {(
+                [
+                  {
+                    t: 'claude-code' as SessionType,
+                    label: 'Claude Code',
+                    icon: <Bot size={14} strokeWidth={1.75} />
+                  },
+                  {
+                    t: 'shell' as SessionType,
+                    label: 'Shell',
+                    icon: <Terminal size={14} strokeWidth={1.75} />
+                  },
+                  {
+                    t: 'ssh' as SessionType,
+                    label: 'SSH',
+                    icon: <Server size={14} strokeWidth={1.75} />
+                  }
+                ] as const
+              ).map(({ t, label, icon }) => (
                 <button
                   key={t}
                   type="button"
@@ -147,14 +186,8 @@ export function SessionDialog({
                       : 'border-op-zinc-700 bg-op-zinc-900 text-op-zinc-400 hover:border-op-zinc-600 hover:text-op-zinc-300'
                   ].join(' ')}
                 >
-                  {t === 'claude-code' ? (
-                    <Bot size={14} strokeWidth={1.75} />
-                  ) : (
-                    <Terminal size={14} strokeWidth={1.75} />
-                  )}
-                  <span className="font-body text-[12px] font-medium">
-                    {t === 'claude-code' ? 'Claude Code' : 'Shell'}
-                  </span>
+                  {icon}
+                  <span className="font-body text-[12px] font-medium">{label}</span>
                 </button>
               ))}
             </div>
@@ -167,7 +200,7 @@ export function SessionDialog({
                 type="text"
                 value={name}
                 onChange={(e) => {
-                  setName(e.target.value)
+                  setNameInput(e.target.value)
                   setNameDirty(true)
                 }}
                 placeholder="workspace/session-name"
@@ -201,32 +234,66 @@ export function SessionDialog({
               </div>
             </div>
 
-            {/* Working directory */}
-            <div className="flex flex-col gap-1.5">
-              <label className="font-body text-[12px] font-medium text-op-zinc-400">
-                Working Directory
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={cwd}
-                  onChange={(e) => {
-                    setCwd(e.target.value)
-                    setCwdDirty(true)
-                  }}
-                  placeholder="/Users/you/Projects/my-project"
-                  className="flex-1 h-9 bg-op-zinc-900 border border-op-zinc-800 rounded-[7px] px-3 text-op-zinc-200 font-mono text-[12px] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-op-zinc-600 focus:border-accent focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)]"
-                />
-                <button
-                  type="button"
-                  onClick={handlePickFolder}
-                  className="flex items-center gap-1.5 h-9 px-3 bg-op-zinc-800 hover:bg-op-zinc-700 border border-op-zinc-700 rounded-[7px] text-op-zinc-300 font-body text-[12px] font-medium transition-colors duration-100 flex-shrink-0"
-                >
-                  <FolderOpen size={13} strokeWidth={1.75} />
-                  Browse…
-                </button>
+            {/* SSH host picker */}
+            {type === 'ssh' && (
+              <div className="flex flex-col gap-1.5">
+                <label className="font-body text-[12px] font-medium text-op-zinc-400">Host</label>
+                {sshHosts.length === 0 ? (
+                  <p className="font-body text-[12px] text-op-zinc-500">
+                    No hosts found in ~/.ssh/config
+                  </p>
+                ) : (
+                  <div className="relative">
+                    <select
+                      value={sshAlias}
+                      onChange={(e) => handleSshAliasChange(e.target.value)}
+                      className="w-full h-9 appearance-none bg-op-zinc-900 border border-op-zinc-800 rounded-[7px] px-3 pr-8 text-op-zinc-200 font-mono text-[13px] outline-none transition-[border-color,box-shadow] duration-150 focus:border-accent focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)] cursor-pointer"
+                    >
+                      {sshHosts.map((h) => (
+                        <option key={h.alias} value={h.alias}>
+                          {h.alias}
+                          {h.hostname ? ` — ${h.hostname}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      size={13}
+                      strokeWidth={1.75}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-op-zinc-500"
+                    />
+                  </div>
+                )}
               </div>
-            </div>
+            )}
+
+            {/* Working directory (hidden for SSH) */}
+            {type !== 'ssh' && (
+              <div className="flex flex-col gap-1.5">
+                <label className="font-body text-[12px] font-medium text-op-zinc-400">
+                  Working Directory
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={cwd}
+                    onChange={(e) => {
+                      setCwd(e.target.value)
+                      setCwdDirty(true)
+                    }}
+                    placeholder="/Users/you/Projects/my-project"
+                    className="flex-1 h-9 bg-op-zinc-900 border border-op-zinc-800 rounded-[7px] px-3 text-op-zinc-200 font-mono text-[12px] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-op-zinc-600 focus:border-accent focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handlePickFolder}
+                    className="flex items-center gap-1.5 h-9 px-3 bg-op-zinc-800 hover:bg-op-zinc-700 border border-op-zinc-700 rounded-[7px] text-op-zinc-300 font-body text-[12px] font-medium transition-colors duration-100 flex-shrink-0"
+                  >
+                    <FolderOpen size={13} strokeWidth={1.75} />
+                    Browse…
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Command (Claude Code only) */}
             {type === 'claude-code' && (

@@ -1,9 +1,11 @@
 import { EventEmitter } from 'node:events'
 import { randomUUID } from 'node:crypto'
+import { homedir } from 'node:os'
 import type { Database } from 'better-sqlite3'
 import { PLANNER_SYSTEM_PROMPT } from '../shared/planner-prompt'
 import type { PtyRegistry } from './pty-registry'
 import type { PtyManager } from './pty-manager'
+import type { PtyExitInfo } from './pty-manager'
 import type {
   PtyId,
   Session,
@@ -40,6 +42,11 @@ interface AttachRecord {
   ptyId: PtyId
   pid: number | null
   unlistenExit: () => void
+}
+
+interface SshReconnectState {
+  attempts: number
+  timer: ReturnType<typeof setTimeout> | null
 }
 
 export interface PtyAttachedEvent {
@@ -84,8 +91,11 @@ function validateNonEmpty(field: string, value: string): string {
   return trimmed
 }
 
+const SSH_BACKOFF_MS = [1000, 2000, 4000]
+
 export class SessionManager extends EventEmitter<EventMap> {
   private readonly attached = new Map<SessionId, AttachRecord>()
+  private readonly sshReconnect = new Map<SessionId, SshReconnectState>()
 
   constructor(
     private readonly db: Database,
@@ -110,7 +120,11 @@ export class SessionManager extends EventEmitter<EventMap> {
       subText: row.sub_text,
       status: toStatus(row.status),
       kind: (row.kind === 'planner' ? 'planner' : 'executor') as Session['kind'],
-      type: (row.type === 'shell' ? 'shell' : 'claude-code') as SessionType,
+      type: (row.type === 'ssh'
+        ? 'ssh'
+        : row.type === 'shell'
+          ? 'shell'
+          : 'claude-code') as SessionType,
       claudeSessionId: row.claude_session_id ?? null,
       parentSessionId: row.parent_session_id ?? null,
       createdAt: row.created_at,
@@ -140,7 +154,8 @@ export class SessionManager extends EventEmitter<EventMap> {
   create(req: SessionCreateRequest): Session {
     const name = validateNonEmpty('name', req.name)
     const cwd = validateNonEmpty('cwd', req.cwd)
-    const type: SessionType = req.type === 'shell' ? 'shell' : 'claude-code'
+    const type: SessionType =
+      req.type === 'ssh' ? 'ssh' : req.type === 'shell' ? 'shell' : 'claude-code'
     const subText = req.subText ?? ''
     const kind = req.kind ?? 'executor'
 
@@ -246,6 +261,12 @@ export class SessionManager extends EventEmitter<EventMap> {
     const current = this.get(id)
     if (!current) throw new SessionNotFoundError(id)
 
+    const sshState = this.sshReconnect.get(id)
+    if (sshState?.timer) {
+      clearTimeout(sshState.timer)
+      this.sshReconnect.delete(id)
+    }
+
     if (this.attached.has(id)) {
       this.detach(id)
     }
@@ -262,6 +283,11 @@ export class SessionManager extends EventEmitter<EventMap> {
 
     const cols = opts?.cols ?? ATTACH_DEFAULT_COLS
     const rows = opts?.rows ?? ATTACH_DEFAULT_ROWS
+
+    if (current.type === 'ssh') {
+      this.sshReconnect.set(id, { attempts: 0, timer: null })
+      return this.spawnSshPty(id, current.command, cols, rows)
+    }
 
     const direnvPrefix =
       'eval "$(command -v direnv >/dev/null 2>&1 && direnv export zsh 2>/dev/null)";'
@@ -300,8 +326,8 @@ export class SessionManager extends EventEmitter<EventMap> {
       throw err
     }
 
-    const handleExit = (): void => {
-      this.handleUnexpectedExit(id)
+    const handleExit = (info: PtyExitInfo): void => {
+      this.handleUnexpectedExit(id, info.exitCode)
     }
     manager.on('exit', handleExit)
     const unlistenExit = (): void => {
@@ -317,6 +343,12 @@ export class SessionManager extends EventEmitter<EventMap> {
   }
 
   detach(id: SessionId): Session {
+    const sshState = this.sshReconnect.get(id)
+    if (sshState?.timer) {
+      clearTimeout(sshState.timer)
+      this.sshReconnect.delete(id)
+    }
+
     const record = this.attached.get(id)
     if (!record) throw new SessionNotAttachedError(id)
     const current = this.get(id)
@@ -359,7 +391,7 @@ export class SessionManager extends EventEmitter<EventMap> {
     }
   }
 
-  private handleUnexpectedExit(id: SessionId): void {
+  private handleUnexpectedExit(id: SessionId, exitCode: number): void {
     const record = this.attached.get(id)
     if (!record) return
     this.attached.delete(id)
@@ -367,12 +399,93 @@ export class SessionManager extends EventEmitter<EventMap> {
     const row = this.db.prepare<[string], SessionRow>(`SELECT * FROM sessions WHERE id = ?`).get(id)
     if (!row) return
 
+    if (row.type === 'ssh' && exitCode !== 0) {
+      const state = this.sshReconnect.get(id) ?? { attempts: 0, timer: null }
+      state.attempts++
+      if (state.attempts <= 3) {
+        const delay = SSH_BACKOFF_MS[state.attempts - 1]
+        this.db
+          .prepare(`UPDATE sessions SET sub_text = ?, last_active_at = ? WHERE id = ?`)
+          .run(`reconnecting (${state.attempts}/3)…`, Date.now(), id)
+        const session = this.get(id)!
+        this.emit('updated', { type: 'updated', session })
+        state.timer = setTimeout(() => this.doSshReconnect(id), delay)
+        this.sshReconnect.set(id, state)
+      } else {
+        this.sshReconnect.delete(id)
+        this.db
+          .prepare(
+            `UPDATE sessions SET status = 'idle', sub_text = 'connection failed', last_active_at = ? WHERE id = ?`
+          )
+          .run(Date.now(), id)
+        const session = this.get(id)!
+        this.emit('updated', { type: 'updated', session })
+      }
+      return
+    }
+
     const now = Date.now()
     this.db
       .prepare(`UPDATE sessions SET status = 'idle', last_active_at = ? WHERE id = ?`)
       .run(now, id)
-
     const session = this.get(id)!
     this.emit('updated', { type: 'updated', session })
+  }
+
+  private spawnSshPty(id: SessionId, alias: string, cols: number, rows: number): Session {
+    const { id: ptyId, manager } = this.ptyRegistry.create({
+      cwd: homedir(),
+      cols,
+      rows,
+      shell: '/usr/bin/ssh',
+      args: [alias],
+      env: { DECK_SESSION_ID: id }
+    })
+
+    const now = Date.now()
+    try {
+      this.db
+        .prepare(`UPDATE sessions SET status = 'working', last_active_at = ? WHERE id = ?`)
+        .run(now, id)
+    } catch (err) {
+      manager.kill()
+      throw err
+    }
+
+    const handleExit = (info: PtyExitInfo): void => {
+      this.handleUnexpectedExit(id, info.exitCode)
+    }
+    manager.on('exit', handleExit)
+    const unlistenExit = (): void => {
+      manager.off('exit', handleExit)
+    }
+    this.attached.set(id, { ptyId, pid: manager.pid, unlistenExit })
+
+    let firstData = false
+    manager.on('data', () => {
+      if (firstData) return
+      firstData = true
+      const state = this.sshReconnect.get(id)
+      if (state) state.attempts = 0
+    })
+
+    this.emit('ptyAttached', { sessionId: id, ptyId, manager })
+    const session = this.get(id)!
+    this.emit('updated', { type: 'updated', session })
+    return session
+  }
+
+  private doSshReconnect(id: SessionId): void {
+    const state = this.sshReconnect.get(id)
+    if (!state) return
+    if (this.attached.has(id)) return
+
+    const row = this.db.prepare<[string], SessionRow>(`SELECT * FROM sessions WHERE id = ?`).get(id)
+    if (!row) {
+      this.sshReconnect.delete(id)
+      return
+    }
+
+    this.spawnSshPty(id, row.command, ATTACH_DEFAULT_COLS, ATTACH_DEFAULT_ROWS)
   }
 }

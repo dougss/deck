@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import { Terminal } from 'lucide-react'
+import { Terminal, Server } from 'lucide-react'
 import { StatusDot, type StatusDotVariant } from '@/components/ui/StatusDot'
 import { formatRelativeTime } from '@/lib/time'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
@@ -138,6 +138,9 @@ export function SessionItem({
             >
               {session.type === 'shell' && (
                 <Terminal size={9} strokeWidth={1.75} className="text-op-zinc-600 flex-shrink-0" />
+              )}
+              {session.type === 'ssh' && (
+                <Server size={9} strokeWidth={1.75} className="text-op-zinc-600 flex-shrink-0" />
               )}
               {session.name}
             </div>

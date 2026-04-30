@@ -8,6 +8,7 @@ import {
   type DeckSettingsApi,
   type DeckSystemApi,
   type DeckHooksApi,
+  type DeckSshApi,
   type GitInfoUpdatedEvent,
   type HookEventPayload,
   type HookInstanceStatus,
@@ -286,7 +287,12 @@ const deck: DeckApi = {
         gitInfoUpdatedListeners.delete(cb)
       }
     }
-  } satisfies DeckGitApi
+  } satisfies DeckGitApi,
+  ssh: {
+    listHosts() {
+      return ipcRenderer.invoke(IPC.SSH_LIST_HOSTS)
+    }
+  } satisfies DeckSshApi
 }
 
 if (process.contextIsolated) {

@@ -72,8 +72,7 @@ interface DeckState {
 const sortWorkspaces = (ws: Workspace[]): Workspace[] =>
   [...ws].sort((a, b) => a.ordinal - b.ordinal || a.createdAt - b.createdAt)
 
-const sortSessions = (ss: Session[]): Session[] =>
-  [...ss].sort((a, b) => b.lastActiveAt - a.lastActiveAt)
+const sortSessions = (ss: Session[]): Session[] => [...ss].sort((a, b) => a.createdAt - b.createdAt)
 
 const expandAll = (ws: Workspace[]): ExpandedMap => {
   const map: ExpandedMap = {}

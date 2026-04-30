@@ -21,16 +21,18 @@ import { EventWatcher, DECK_DIR } from './event-watcher'
 import { registerHookHandlers } from './ipc-handlers-hooks'
 import { GitManager } from './git-manager'
 import { registerGitHandlers } from './ipc-handlers-git'
+import { registerSshHandlers } from './ipc-handlers-ssh'
+import { runSshSmoke } from './ssh-smoke'
 import { mkdirSync } from 'node:fs'
 
-type SmokeKind = 'db' | 'ws' | 'session'
+type SmokeKind = 'db' | 'ws' | 'session' | 'ssh'
 
 function parseSmokeKind(argv: string[]): SmokeKind | null {
   for (const arg of argv) {
     if (arg === '--deck-smoke') return 'db'
     if (arg.startsWith('--deck-smoke=')) {
       const kind = arg.slice('--deck-smoke='.length)
-      if (kind === 'db' || kind === 'ws' || kind === 'session') return kind
+      if (kind === 'db' || kind === 'ws' || kind === 'session' || kind === 'ssh') return kind
       return null
     }
   }
@@ -100,6 +102,11 @@ app.whenReady().then(async () => {
     app.exit(code)
     return
   }
+  if (smokeKind === 'ssh') {
+    const code = await runSshSmoke()
+    app.exit(code)
+    return
+  }
 
   electronApp.setAppUserModelId('com.electron')
 
@@ -121,6 +128,7 @@ app.whenReady().then(async () => {
   registerSystemHandlers()
   registerHookHandlers()
   registerGitHandlers(gitManager, sessionManager, () => mainWindow)
+  registerSshHandlers()
 
   // Ensure ~/.deck/ exists before starting event watcher
   mkdirSync(DECK_DIR, { recursive: true, mode: 0o755 })

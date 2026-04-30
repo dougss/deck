@@ -22,32 +22,35 @@ export function registerGitHandlers(
 
   ipcMain.handle(IPC.GIT_GET_INFO, async (_event, req: GitGetInfoRequest) => {
     const session = sessionManager.get(req.sessionId)
-    if (!session) return { isRepo: false, currentBranch: null, head: null }
+    if (!session || session.type === 'ssh')
+      return { isRepo: false, currentBranch: null, head: null }
     return gitManager.getInfo(session.cwd)
   })
 
   ipcMain.handle(IPC.GIT_LIST_BRANCHES, async (_event, req: GitListBranchesRequest) => {
     const session = sessionManager.get(req.sessionId)
-    if (!session) return []
+    if (!session || session.type === 'ssh') return []
     return gitManager.listBranches(session.cwd)
   })
 
   ipcMain.handle(IPC.GIT_CHECKOUT, async (_event, req: GitCheckoutRequest) => {
     const session = sessionManager.get(req.sessionId)
     if (!session) return { ok: false, error: 'Session not found' }
+    if (session.type === 'ssh') return { ok: false, error: 'Not applicable for SSH sessions' }
     return gitManager.checkout(session.cwd, req.branch)
   })
 
   ipcMain.handle(IPC.GIT_STASH_CHECKOUT, async (_event, req: GitCheckoutRequest) => {
     const session = sessionManager.get(req.sessionId)
     if (!session) return { ok: false, error: 'Session not found' }
+    if (session.type === 'ssh') return { ok: false, error: 'Not applicable for SSH sessions' }
     return gitManager.stashAndCheckout(session.cwd, req.branch)
   })
 
   // Push gitInfo immediately after PTY attach so renderer has it before header renders
   sessionManager.on('ptyAttached', ({ sessionId }) => {
     const session = sessionManager.get(sessionId)
-    if (!session) return
+    if (!session || session.type === 'ssh') return
     gitManager
       .getInfo(session.cwd)
       .then((gitInfo) => push({ sessionId, gitInfo }))

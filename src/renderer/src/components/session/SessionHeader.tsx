@@ -8,6 +8,7 @@ function getConfigLabel(
   sessionType: SessionType
 ): { label: string; variant: ConfigBadgeVariant } {
   if (sessionType === 'shell') return { label: 'shell', variant: 'neutral' }
+  if (sessionType === 'ssh') return { label: 'ssh', variant: 'neutral' }
   if (workspaceName.toLowerCase().includes('leve')) {
     return { label: 'claude-levesaude', variant: 'cyan' }
   }
@@ -78,7 +79,7 @@ export function SessionHeader(): React.JSX.Element {
 
       {/* Right: branch switcher + config badge + more button */}
       <div className="flex items-center gap-2.5 flex-shrink-0">
-        {gitInfo?.isRepo && (
+        {gitInfo?.isRepo && session.type !== 'ssh' && (
           <BranchSwitcher
             sessionId={session.id}
             gitInfo={gitInfo}
