@@ -21,7 +21,7 @@ export function PlannerEmptyState(): React.JSX.Element {
         <h3 className="font-display font-semibold text-sm text-op-zinc-100 m-0">No planner yet</h3>
         <p className="text-op-zinc-400 text-xs leading-relaxed max-w-[280px] m-0">
           Start a conversational planning session for this session. Claude will read files and
-          discuss architecture — it can't edit or run commands.
+          discuss architecture — it can&apos;t edit or run commands.
         </p>
       </div>
       <button

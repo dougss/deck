@@ -71,6 +71,16 @@ export function buildApplicationMenu(mainWindow: BrowserWindow): Menu {
           accelerator: 'CmdOrCtrl+Shift+B',
           click: () => send(IPC.SHORTCUT_BRANCH_SWITCHER)
         },
+        {
+          label: 'Toggle Embedded Terminal',
+          accelerator: 'Control+`',
+          click: () => send(IPC.SHORTCUT_TOGGLE_EMBEDDED)
+        },
+        {
+          label: 'Toggle Embedded Terminal (alt)',
+          accelerator: 'CmdOrCtrl+J',
+          click: () => send(IPC.SHORTCUT_TOGGLE_EMBEDDED)
+        },
         { type: 'separator' },
         { role: 'reload' },
         { role: 'forceReload' },

@@ -6,36 +6,30 @@ import { WebLinksAddon } from '@xterm/addon-web-links'
 import type { PtyId, SessionId } from '../../../../shared/ipc'
 import { handleMacOSKey } from '@/lib/macos-terminal-keys'
 
-// NOTE: Task 10 migration from Phase 1 Terminal.tsx.
-// Phase 1 model: xterm spawns its own PTY via pty.spawn, owns kill on unmount.
-// Phase 2 model: xterm attaches to an externally-managed ptyId; lifecycle
-// (spawn/kill) belongs to SessionManager via session.attach/detach.
-// Preserved from Phase 1: xterm theme, font stack, FitAddon + WebLinks addons,
-// ResizeObserver debounce (100ms), cursorBlink, allowProposedApi.
-// Intentionally removed: internal pty.spawn, pty.kill on unmount.
-
-interface SessionTerminalProps {
+interface EmbeddedTerminalProps {
   sessionId: SessionId
-  ptyId: PtyId
+  cwd: string
   visible: boolean
-  focused?: boolean
+  focused: boolean
   onFocusRequest?: () => void
 }
 
-export function SessionTerminal({
+export function EmbeddedTerminal({
   sessionId,
-  ptyId,
+  cwd,
   visible,
-  focused = true,
+  focused,
   onFocusRequest
-}: SessionTerminalProps): React.JSX.Element {
+}: EmbeddedTerminalProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const termRef = useRef<XTerm | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
+  const ptyIdRef = useRef<PtyId | null>(null)
   const visibleRef = useRef(visible)
+
   useEffect(() => {
     visibleRef.current = visible
-  }, [visible])
+  })
 
   useEffect(() => {
     const container = containerRef.current
@@ -59,31 +53,20 @@ export function SessionTerminal({
     const fit = new FitAddon()
     term.loadAddon(fit)
     term.loadAddon(new WebLinksAddon((_, url) => window.deck.system.openExternal(url)))
-
     term.open(container)
     termRef.current = term
     fitRef.current = fit
 
     term.attachCustomKeyEventHandler((e: KeyboardEvent) =>
-      handleMacOSKey(e, (data) => window.deck.pty.write(ptyId, data))
+      handleMacOSKey(e, (data) => {
+        const ptyId = ptyIdRef.current
+        if (ptyId) window.deck.pty.write(ptyId, data)
+      })
     )
 
     if (visibleRef.current) {
       fit.fit()
-      window.deck.pty.resize(ptyId, term.cols, term.rows)
     }
-
-    const inputDisposable = term.onData((data) => {
-      window.deck.pty.write(ptyId, data)
-    })
-
-    const unsubData = window.deck.pty.onData(ptyId, (chunk) => {
-      term.write(chunk)
-    })
-
-    const unsubExit = window.deck.pty.onExit(ptyId, (info) => {
-      term.write(`\r\n\x1b[90m[pty exited: code=${info.exitCode}]\x1b[0m\r\n`)
-    })
 
     let resizeTimer: ReturnType<typeof setTimeout> | null = null
     const observer = new ResizeObserver(() => {
@@ -92,51 +75,95 @@ export function SessionTerminal({
       resizeTimer = setTimeout(() => {
         const t = termRef.current
         const f = fitRef.current
-        if (!t || !f) return
+        const ptyId = ptyIdRef.current
+        if (!t || !f || !ptyId) return
         f.fit()
         window.deck.pty.resize(ptyId, t.cols, t.rows)
       }, 100)
     })
     observer.observe(container)
 
+    let cleanedUp = false
+    let unsubData: (() => void) | null = null
+    let unsubExit: (() => void) | null = null
+
+    window.deck.pty
+      .spawn({
+        sessionId,
+        cwd,
+        shell: '/bin/zsh',
+        args: ['-il'],
+        cols: term.cols,
+        rows: term.rows
+      })
+      .then(({ ptyId }) => {
+        if (cleanedUp) {
+          window.deck.pty.kill(ptyId)
+          return
+        }
+
+        ptyIdRef.current = ptyId
+
+        term.onData((data) => window.deck.pty.write(ptyId, data))
+
+        unsubData = window.deck.pty.onData(ptyId, (chunk) => {
+          term.write(chunk)
+        })
+
+        unsubExit = window.deck.pty.onExit(ptyId, (info) => {
+          term.write(`\r\n\x1b[90m[pty exited: code=${info.exitCode}]\x1b[0m\r\n`)
+        })
+      })
+      .catch((err) => {
+        console.error('[EmbeddedTerminal] spawn failed:', err)
+      })
+
     return () => {
+      cleanedUp = true
       if (resizeTimer) clearTimeout(resizeTimer)
       observer.disconnect()
-      inputDisposable.dispose()
-      unsubData()
-      unsubExit()
+      unsubData?.()
+      unsubExit?.()
+      if (ptyIdRef.current) {
+        window.deck.pty.kill(ptyIdRef.current)
+        ptyIdRef.current = null
+      }
       term.dispose()
       termRef.current = null
       fitRef.current = null
     }
-  }, [ptyId])
+    // sessionId + cwd are stable per mount (component is keyed by sessionId in parent)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useLayoutEffect(() => {
     if (!visible) return
     const raf = requestAnimationFrame(() => {
       const term = termRef.current
       const fit = fitRef.current
+      const ptyId = ptyIdRef.current
       if (!term || !fit) return
       fit.fit()
-      window.deck.pty.resize(ptyId, term.cols, term.rows)
+      if (ptyId) window.deck.pty.resize(ptyId, term.cols, term.rows)
       if (focused) term.focus()
     })
     return () => cancelAnimationFrame(raf)
-  }, [visible, focused, ptyId])
+  }, [visible, focused])
 
   return (
     <div
-      ref={containerRef}
       onMouseDown={onFocusRequest}
-      data-session-id={sessionId}
-      style={{
-        position: 'absolute',
-        top: '20px',
-        right: '0',
-        bottom: '20px',
-        left: '22px',
-        display: visible ? 'block' : 'none'
-      }}
-    />
+      style={{ position: 'relative', width: '100%', height: '100%' }}
+    >
+      <div
+        ref={containerRef}
+        data-embedded-session-id={sessionId}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: visible ? 'block' : 'none'
+        }}
+      />
+    </div>
   )
 }

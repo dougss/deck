@@ -4,7 +4,6 @@ import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import type { PtyId } from '../../../../shared/ipc'
-import { useDeckStore } from '@/stores/deck'
 import { handleMacOSKey } from '@/lib/macos-terminal-keys'
 
 interface UtilityTerminalProps {
@@ -23,7 +22,9 @@ export function UtilityTerminal({
   const fitRef = useRef<FitAddon | null>(null)
   const ptyIdRef = useRef<PtyId | null>(null)
   const visibleRef = useRef(visible)
-  visibleRef.current = visible
+  useEffect(() => {
+    visibleRef.current = visible
+  }, [visible])
 
   useEffect(() => {
     const container = containerRef.current
@@ -126,6 +127,7 @@ export function UtilityTerminal({
       termRef.current = null
       fitRef.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useLayoutEffect(() => {
@@ -155,16 +157,4 @@ export function UtilityTerminal({
       }}
     />
   )
-}
-
-export function useUtilityCwd(): string {
-  return useDeckStore((s) => {
-    const activeSession = s.activeSessionId
-      ? s.sessions.find((x) => x.id === s.activeSessionId)
-      : null
-    const workspace = activeSession
-      ? s.workspaces.find((w) => w.id === activeSession.workspaceId)
-      : null
-    return workspace?.path ?? ''
-  })
 }

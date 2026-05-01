@@ -1,7 +1,7 @@
 import { useShallow } from 'zustand/shallow'
 import { useDeckStore, useActiveSessionId } from '../../stores/deck'
 import type { Session } from '../../../../shared/ipc'
-import { SessionTerminal } from './SessionTerminal'
+import { SessionSplit } from './SessionSplit'
 
 export function TerminalHost(): React.JSX.Element {
   const attached = useDeckStore(
@@ -29,7 +29,13 @@ export function TerminalHost(): React.JSX.Element {
   return (
     <div className="relative h-full w-full bg-[#080808]">
       {attached.map((s) => (
-        <SessionTerminal key={s.id} sessionId={s.id} ptyId={s.ptyId} visible={s.id === activeId} />
+        <SessionSplit
+          key={s.id}
+          sessionId={s.id}
+          ptyId={s.ptyId}
+          cwd={s.cwd}
+          visible={s.id === activeId}
+        />
       ))}
     </div>
   )
