@@ -1,6 +1,6 @@
 {
   "name": "deck",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Multi-session Claude Code orchestrator for macOS",
   "main": "./out/main/index.js",
   "author": "Douglas Silva",
