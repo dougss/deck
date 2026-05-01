@@ -1,6 +1,7 @@
 import { useActiveSession, useActiveWorkspace, useGitInfo } from '@/stores/deck'
 import { ConfigBadge, IconButton, type ConfigBadgeVariant } from '@/components/ui'
 import { BranchSwitcher } from './BranchSwitcher'
+import { FolderOpen } from 'lucide-react'
 import type { SessionType } from '../../../../shared/ipc'
 
 function getConfigLabel(sessionType: SessionType): { label: string; variant: ConfigBadgeVariant } {
@@ -23,6 +24,16 @@ export function SessionHeader(): React.JSX.Element {
   }
 
   const { label, variant } = getConfigLabel(session.type)
+
+  const handleOpenInFinder = async (): Promise<void> => {
+    if (session?.cwd) {
+      try {
+        await window.deck.system.openExternal(`file://${session.cwd}`)
+      } catch (error) {
+        console.error('Failed to open in Finder:', error)
+      }
+    }
+  }
 
   return (
     <div className="h-[50px] flex-shrink-0 flex items-center justify-between px-5 gap-4 bg-op-surface-2 border-b border-op-border">
@@ -71,7 +82,7 @@ export function SessionHeader(): React.JSX.Element {
         </div>
       </div>
 
-      {/* Right: branch switcher + config badge + more button */}
+      {/* Right: branch switcher + config badge + finder button + more button */}
       <div className="flex items-center gap-2.5 flex-shrink-0">
         {gitInfo?.isRepo && session.type !== 'ssh' && (
           <BranchSwitcher
@@ -81,6 +92,9 @@ export function SessionHeader(): React.JSX.Element {
           />
         )}
         <ConfigBadge label={label} variant={variant} />
+        <IconButton label="Open in Finder" onClick={handleOpenInFinder}>
+          <FolderOpen size={16} />
+        </IconButton>
         <IconButton label="More options">
           <svg
             width="16"
