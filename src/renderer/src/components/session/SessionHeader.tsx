@@ -1,6 +1,8 @@
 import { useActiveSession, useActiveWorkspace, useGitInfo } from '@/stores/deck'
-import { ConfigBadge, IconButton, type ConfigBadgeVariant } from '@/components/ui'
+import { ConfigBadge, type ConfigBadgeVariant } from '@/components/ui'
 import { BranchSwitcher } from './BranchSwitcher'
+import { OpenInSplitButton } from './OpenInSplitButton'
+import { useSettings } from '@/hooks/useSettings'
 import type { SessionType } from '../../../../shared/ipc'
 
 function getConfigLabel(sessionType: SessionType): { label: string; variant: ConfigBadgeVariant } {
@@ -13,6 +15,8 @@ export function SessionHeader(): React.JSX.Element {
   const session = useActiveSession()
   const workspace = useActiveWorkspace()
   const gitInfo = useGitInfo(session?.id ?? '')
+
+  const settings = useSettings()
 
   if (!session || !workspace) {
     return (
@@ -71,7 +75,7 @@ export function SessionHeader(): React.JSX.Element {
         </div>
       </div>
 
-      {/* Right: branch switcher + config badge + more button */}
+      {/* Right: branch switcher + config badge + open-in split button */}
       <div className="flex items-center gap-2.5 flex-shrink-0">
         {gitInfo?.isRepo && session.type !== 'ssh' && (
           <BranchSwitcher
@@ -81,22 +85,9 @@ export function SessionHeader(): React.JSX.Element {
           />
         )}
         <ConfigBadge label={label} variant={variant} />
-        <IconButton label="More options">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="1" />
-            <circle cx="19" cy="12" r="1" />
-            <circle cx="5" cy="12" r="1" />
-          </svg>
-        </IconButton>
+        {settings && (
+          <OpenInSplitButton session={session} customEditorCommand={settings.customEditorCommand} />
+        )}
       </div>
     </div>
   )
