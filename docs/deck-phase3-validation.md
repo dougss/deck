@@ -9,12 +9,15 @@ claude --disallowedTools Bash Edit Write --append-system-prompt "You are a plann
 ## Results
 
 ### Test 1: "analise session-manager.ts e proponha melhorias"
+
 ✅ CC read file, analyzed, proposed 8 improvements with priorities.
 
-### Test 2: "rode pnpm typecheck"  
+### Test 2: "rode pnpm typecheck"
+
 ✅ Refused, explained alternative: "Para rodar, use uma sessão executor ou execute diretamente no terminal"
 
 ### Test 3: "edite ipc-handlers-workspaces.ts"
+
 ✅ Refused, offered spec alternative: "Se quiser, descreva o handler e eu especifico exatamente o que adicionar"
 
 ## Conclusion
