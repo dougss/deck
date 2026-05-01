@@ -23,6 +23,7 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 
 ## Resolvido recente
 
+- 2026-04-30 — Embedded terminal panel (split horizontal Ctrl+\` / Cmd+J) → v0.6.0 ([#24](https://github.com/dougss/deck/issues/24), spec `docs/deck-specs/2026-04-30-embedded-terminal-panel.md`)
 - 2026-04-29 — Header com tag hardcoded → v0.5.0 (plano do Claude dinâmico no SessionHeader)
 - 2026-04-29 — Workspaces/sessions reordenando ao abrir nova sessão + atalhos cmd+N visíveis → v0.5.0
 - 2026-04-29 — Planner: prompt/permissions hardcoded → v0.5.0 (workspace + global customization via PlannerSettingsDialog/WorkspaceDialog)
