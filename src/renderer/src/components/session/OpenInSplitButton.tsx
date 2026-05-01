@@ -9,18 +9,6 @@ import {
 } from '@/components/ui/DropdownMenu'
 import { ChevronDown, Code, SquareCode, Zap, Wrench } from 'lucide-react'
 
-const baseButtonClasses =
-  'inline-flex items-center justify-center gap-2 font-body font-medium rounded-md transition-colors duration-75 outline-none border ' +
-  'focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-transparent ' +
-  'data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none ' +
-  'border-op-border bg-transparent hover:bg-op-zinc-800 text-op-zinc-200 active:bg-op-zinc-900'
-
-const sizeClasses = {
-  sm: 'h-7 px-2.5 text-[12px]',
-  md: 'h-8 px-3 text-[13px]',
-  lg: 'h-9 px-4 text-[14px]'
-}
-
 interface OpenInSplitButtonProps {
   session: Session
   customEditorCommand: string | null
@@ -115,7 +103,7 @@ export function OpenInSplitButton({
           onClick={handlePrimaryClick}
           disabled={disabled}
           title={disabled ? 'No working directory' : `Open in ${editorLabel}`}
-          className={`${baseButtonClasses} ${sizeClasses.sm} rounded-r-none border-r-0`}
+          className="inline-flex items-center justify-center gap-2 h-7 px-2.5 text-[12px] font-body font-medium transition-colors duration-75 outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:opacity-50 disabled:cursor-not-allowed bg-transparent hover:bg-op-zinc-800 text-op-zinc-200 active:bg-op-zinc-900"
         >
           {icon}
           <span>{editorLabel}</span>
@@ -128,7 +116,7 @@ export function OpenInSplitButton({
             <button
               disabled={disabled}
               title={disabled ? 'No working directory' : 'Choose editor'}
-              className={`${baseButtonClasses} ${sizeClasses.sm} rounded-l-none border-l-0 px-2`}
+              className="inline-flex items-center justify-center h-7 px-2 transition-colors duration-75 outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:opacity-50 disabled:cursor-not-allowed bg-transparent hover:bg-op-zinc-800 text-op-zinc-200 active:bg-op-zinc-900"
             >
               <ChevronDown size={14} strokeWidth={1.75} />
             </button>
