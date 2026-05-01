@@ -113,6 +113,17 @@ Phase plans live in `docs/deck-phase*.md`. Friction tracking in `friction-log.md
 - `src/main/session-manager.ts` — core session logic, planner attachment rules
 - `src/main/db/migrations.ts` — append-only; never edit existing migrations
 
+## ESLint policy (autonomous agents read this)
+
+**Never silence warnings to "make the pipeline pass".**
+
+- Do NOT scatter `// eslint-disable-next-line <rule>` to suppress warnings.
+- If ESLint complains, refactor the code OR change the rule severity globally in `eslint.config.mjs`.
+- Acceptable: a single, well-justified disable-line for an intentional pattern (e.g. `exhaustive-deps` on a useEffect that must run once with stable closures), with a comment above it explaining why.
+- Unacceptable: scattering disables across files just to make CI green.
+
+When in doubt: stop and ask the user before suppressing.
+
 ## References
 
 - Constitution / principles: `docs/deck-constitution.md`
