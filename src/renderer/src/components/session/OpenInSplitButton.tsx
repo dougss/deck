@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { EditorPreset, Session } from '../../../../shared/ipc'
 import { useLastOpenInEditor } from '@/hooks/useLastOpenInEditor'
 import {
@@ -8,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/DropdownMenu'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Code, SquareCode, FolderOpen, Zap, Wrench } from 'lucide-react'
 
 const baseButtonClasses =
   'inline-flex items-center justify-center gap-2 font-body font-medium rounded-md transition-colors duration-75 outline-none border ' +
