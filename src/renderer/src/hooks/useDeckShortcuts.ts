@@ -69,6 +69,14 @@ export function useDeckShortcuts(): void {
       useDeckStore.getState().openPalette()
     })
 
+    const unsubEmbedded = window.deck.shortcuts.onToggleEmbedded(() => {
+      const { activeSessionId, sessions, toggleEmbeddedTerminal } = useDeckStore.getState()
+      if (!activeSessionId) return
+      const active = sessions.find((s) => s.id === activeSessionId)
+      if (!active || active.ptyId === null || active.kind !== 'executor') return
+      toggleEmbeddedTerminal(activeSessionId)
+    })
+
     return () => {
       unsubNew()
       unsubStop()
@@ -77,6 +85,7 @@ export function useDeckShortcuts(): void {
       unsubTogglePanel()
       unsubBranch()
       unsubPalette()
+      unsubEmbedded()
     }
   }, [])
 }

@@ -233,6 +233,11 @@ const deck: DeckApi = {
       const listener = (): void => cb()
       ipcRenderer.on(IPC.SHORTCUT_COMMAND_PALETTE, listener)
       return () => ipcRenderer.removeListener(IPC.SHORTCUT_COMMAND_PALETTE, listener)
+    },
+    onToggleEmbedded(cb) {
+      const listener = (): void => cb()
+      ipcRenderer.on(IPC.SHORTCUT_TOGGLE_EMBEDDED, listener)
+      return () => ipcRenderer.removeListener(IPC.SHORTCUT_TOGGLE_EMBEDDED, listener)
     }
   } satisfies DeckShortcutsApi,
   settings: {

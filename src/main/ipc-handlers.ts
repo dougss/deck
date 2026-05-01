@@ -26,12 +26,15 @@ export function registerPtyHandlers(
       args = ['-il']
     }
 
+    const env = req.sessionId ? { DECK_SESSION_ID: req.sessionId } : undefined
+
     const { id, manager } = registry.create({
       cwd: req.cwd,
       cols: req.cols,
       rows: req.rows,
       shell,
-      args
+      args,
+      env
     })
 
     manager.on('data', (chunk) => {

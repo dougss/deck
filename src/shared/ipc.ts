@@ -60,6 +60,7 @@ export const IPC = {
   GIT_INFO_UPDATED: 'git:info-updated',
   SHORTCUT_BRANCH_SWITCHER: 'shortcut:branch-switcher',
   SHORTCUT_COMMAND_PALETTE: 'shortcut:command-palette',
+  SHORTCUT_TOGGLE_EMBEDDED: 'shortcut:toggle-embedded',
   SSH_LIST_HOSTS: 'ssh:list-hosts'
 } as const
 
@@ -70,6 +71,7 @@ export interface PtySpawnRequest {
   shell?: string
   args?: string[]
   command?: string
+  sessionId?: SessionId
 }
 
 export interface PtySpawnResponse {
@@ -353,6 +355,7 @@ export interface DeckShortcutsApi {
   onTogglePanel(cb: () => void): () => void
   onBranchSwitcher(cb: () => void): () => void
   onCommandPalette(cb: () => void): () => void
+  onToggleEmbedded(cb: () => void): () => void
 }
 
 export interface DeckApi {

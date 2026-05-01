@@ -13,10 +13,18 @@ import type {
   WorkspaceUpdateEvent,
   NotificationState
 } from '../../../shared/ipc'
+import {
+  clearEmbeddedToggle,
+  getEmbeddedToggle,
+  setEmbeddedToggle
+} from '@/lib/embedded-terminal-storage'
 
 type ExpandedMap = Record<WorkspaceId, true | undefined>
 type NotificationMap = Record<SessionId, NotificationState>
 type GitInfoMap = Record<SessionId, GitInfo>
+type EmbeddedToggleMap = Record<SessionId, boolean>
+type EmbeddedFocusSide = 'main' | 'embedded'
+type EmbeddedFocusMap = Record<SessionId, EmbeddedFocusSide>
 
 type RightPanelMode = 'planner' | 'terminal'
 
@@ -46,6 +54,9 @@ interface DeckState {
   gitInfoMap: GitInfoMap
   openBranchSwitcherTick: number
 
+  embeddedToggleMap: EmbeddedToggleMap
+  embeddedFocusMap: EmbeddedFocusMap
+
   hydrate: () => Promise<void>
   subscribe: () => () => void
 
@@ -67,6 +78,8 @@ interface DeckState {
   clearGitInfo: (sessionId: SessionId) => void
   triggerOpenBranchSwitcher: () => void
   createPlanner: () => Promise<void>
+  toggleEmbeddedTerminal: (sessionId: SessionId) => void
+  setEmbeddedFocus: (sessionId: SessionId, side: EmbeddedFocusSide) => void
 }
 
 const sortWorkspaces = (ws: Workspace[]): Workspace[] =>
@@ -116,6 +129,9 @@ export const useDeckStore = create<DeckState>()(
 
       gitInfoMap: {},
       openBranchSwitcherTick: 0,
+
+      embeddedToggleMap: {},
+      embeddedFocusMap: {},
 
       hydrate: async () => {
         try {
@@ -184,18 +200,52 @@ export const useDeckStore = create<DeckState>()(
                 }
               }
               if (event.type === 'updated') {
-                return {
-                  sessions: sortSessions(
-                    state.sessions.map((s) => (s.id === event.session.id ? event.session : s))
-                  )
+                const prev = state.sessions.find((s) => s.id === event.session.id)
+                const nextSessions = sortSessions(
+                  state.sessions.map((s) => (s.id === event.session.id ? event.session : s))
+                )
+                // Hydrate embedded toggle from localStorage when ptyId transitions to non-null
+                // (covers initial attach + re-attach after detach).
+                const becameAttached =
+                  event.session.ptyId !== null && (!prev || prev.ptyId === null)
+                if (becameAttached && getEmbeddedToggle(event.session.id)) {
+                  return {
+                    sessions: nextSessions,
+                    embeddedToggleMap: { ...state.embeddedToggleMap, [event.session.id]: true },
+                    embeddedFocusMap: {
+                      ...state.embeddedFocusMap,
+                      [event.session.id]: 'embedded' as EmbeddedFocusSide
+                    }
+                  }
                 }
+                // When detached, drop embedded UI state for this session (PTY died).
+                const becameDetached = event.session.ptyId === null && prev && prev.ptyId !== null
+                if (becameDetached) {
+                  const restToggle = { ...state.embeddedToggleMap }
+                  delete restToggle[event.session.id]
+                  const restFocus = { ...state.embeddedFocusMap }
+                  delete restFocus[event.session.id]
+                  return {
+                    sessions: nextSessions,
+                    embeddedToggleMap: restToggle,
+                    embeddedFocusMap: restFocus
+                  }
+                }
+                return { sessions: nextSessions }
               }
               const nextGitMap = { ...state.gitInfoMap }
               delete nextGitMap[event.id]
+              const restToggle = { ...state.embeddedToggleMap }
+              delete restToggle[event.id]
+              const restFocus = { ...state.embeddedFocusMap }
+              delete restFocus[event.id]
+              clearEmbeddedToggle(event.id)
               return {
                 sessions: state.sessions.filter((s) => s.id !== event.id),
                 activeSessionId: state.activeSessionId === event.id ? null : state.activeSessionId,
-                gitInfoMap: nextGitMap
+                gitInfoMap: nextGitMap,
+                embeddedToggleMap: restToggle,
+                embeddedFocusMap: restFocus
               }
             },
             false,
@@ -353,6 +403,53 @@ export const useDeckStore = create<DeckState>()(
           'ui/openBranchSwitcher'
         ),
 
+      toggleEmbeddedTerminal: (sessionId) =>
+        set(
+          (state) => {
+            const visible = state.embeddedToggleMap[sessionId] === true
+            const focus = state.embeddedFocusMap[sessionId] ?? 'embedded'
+            // 3-state machine:
+            //   hidden                -> visible + focus=embedded
+            //   visible, focus=main   -> visible + focus=embedded
+            //   visible, focus=embedded -> hidden
+            if (!visible) {
+              setEmbeddedToggle(sessionId, true)
+              return {
+                embeddedToggleMap: { ...state.embeddedToggleMap, [sessionId]: true },
+                embeddedFocusMap: { ...state.embeddedFocusMap, [sessionId]: 'embedded' }
+              }
+            }
+            if (focus === 'main') {
+              return {
+                embeddedFocusMap: { ...state.embeddedFocusMap, [sessionId]: 'embedded' }
+              }
+            }
+            setEmbeddedToggle(sessionId, false)
+            const restToggle = { ...state.embeddedToggleMap }
+            delete restToggle[sessionId]
+            const restFocus = { ...state.embeddedFocusMap }
+            delete restFocus[sessionId]
+            return {
+              embeddedToggleMap: restToggle,
+              embeddedFocusMap: restFocus
+            }
+          },
+          false,
+          'ui/toggleEmbeddedTerminal'
+        ),
+
+      setEmbeddedFocus: (sessionId, side) =>
+        set(
+          (state) => {
+            if (state.embeddedFocusMap[sessionId] === side) return state
+            return {
+              embeddedFocusMap: { ...state.embeddedFocusMap, [sessionId]: side }
+            }
+          },
+          false,
+          'ui/setEmbeddedFocus'
+        ),
+
       createPlanner: async (): Promise<void> => {
         const { workspaces, sessions, activeSessionId } = useDeckStore.getState()
         const activeSession = activeSessionId
@@ -411,6 +508,12 @@ export const useActiveWorkspace = (): Workspace | null =>
 
 export const useGitInfo = (sessionId: SessionId): GitInfo | null =>
   useDeckStore((s) => s.gitInfoMap[sessionId] ?? null)
+
+export const useEmbeddedToggle = (sessionId: SessionId): boolean =>
+  useDeckStore((s) => s.embeddedToggleMap[sessionId] === true)
+
+export const useEmbeddedFocus = (sessionId: SessionId): EmbeddedFocusSide =>
+  useDeckStore((s) => s.embeddedFocusMap[sessionId] ?? 'embedded')
 
 export const useActivePlannerSession = (): Session | null =>
   useDeckStore((s) =>
