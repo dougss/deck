@@ -6,7 +6,8 @@ import {
   type GitCheckoutRequest,
   type GitGetInfoRequest,
   type GitInfoUpdatedEvent,
-  type GitListBranchesRequest
+  type GitListBranchesRequest,
+  type GitListBranchesWithRemotesRequest
 } from '../shared/ipc'
 
 export function registerGitHandlers(
@@ -32,6 +33,15 @@ export function registerGitHandlers(
     if (!session || session.type === 'ssh') return []
     return gitManager.listBranches(session.cwd)
   })
+
+  ipcMain.handle(
+    IPC.GIT_LIST_BRANCHES_WITH_REMOTES,
+    async (_event, req: GitListBranchesWithRemotesRequest) => {
+      const session = sessionManager.get(req.sessionId)
+      if (!session || session.type === 'ssh') return { local: [], remote: [] }
+      return gitManager.listBranchesWithRemotes(session.cwd)
+    }
+  )
 
   ipcMain.handle(IPC.GIT_CHECKOUT, async (_event, req: GitCheckoutRequest) => {
     const session = sessionManager.get(req.sessionId)

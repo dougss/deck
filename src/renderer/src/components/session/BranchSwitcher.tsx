@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDeckStore } from '@/stores/deck'
 import { useToast } from '@/components/ui/Toast'
-import type { GitInfo } from '../../../../shared/ipc'
+import type { GitBranchGroups, GitInfo } from '../../../../shared/ipc'
 
 interface Props {
   sessionId: string
@@ -17,7 +17,7 @@ function truncate(s: string): string {
 
 export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false)
-  const [branches, setBranches] = useState<string[]>([])
+  const [branchGroups, setBranchGroups] = useState<GitBranchGroups>({ local: [], remote: [] })
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [highlightIdx, setHighlightIdx] = useState(-1)
@@ -28,9 +28,28 @@ export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX
   const tick = useDeckStore((s) => s.openBranchSwitcherTick)
   const setGitInfo = useDeckStore((s) => s.setGitInfo)
 
-  const filteredBranches = searchQuery
-    ? branches.filter((b) => b.toLowerCase().includes(searchQuery.toLowerCase()))
-    : branches
+  // Combine local and remote branches for filtering
+  const allBranches = useMemo(
+    () => [...branchGroups.local, ...branchGroups.remote],
+    [branchGroups.local, branchGroups.remote]
+  )
+  const filteredBranches = useMemo(
+    () =>
+      searchQuery
+        ? allBranches.filter((b) => b.toLowerCase().includes(searchQuery.toLowerCase()))
+        : allBranches,
+    [allBranches, searchQuery]
+  )
+
+  // Separate filtered branches into local and remote
+  const filteredLocal = useMemo(
+    () => branchGroups.local.filter((b) => b.toLowerCase().includes(searchQuery.toLowerCase())),
+    [branchGroups.local, searchQuery]
+  )
+  const filteredRemote = useMemo(
+    () => branchGroups.remote.filter((b) => b.toLowerCase().includes(searchQuery.toLowerCase())),
+    [branchGroups.remote, searchQuery]
+  )
 
   // Cmd+Shift+B opens via tick
   useEffect(() => {
@@ -66,10 +85,10 @@ export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX
 
   // Initial highlight when branches load (or dropdown reopens with cached branches)
   useEffect(() => {
-    if (!isOpen || branches.length === 0) return
+    if (!isOpen || allBranches.length === 0) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHighlightIdx(branches.length > 1 ? 1 : 0)
-  }, [branches, isOpen])
+    setHighlightIdx(allBranches.length > 1 ? 1 : 0)
+  }, [allBranches, isOpen])
 
   // Reset highlight to top of filtered list when query changes
   useEffect(() => {
@@ -87,10 +106,16 @@ export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX
   const open = async (): Promise<void> => {
     if (isIdle) return
     setIsOpen(true)
-    const list = await window.deck.git.listBranches(sessionId)
+    const groups = await window.deck.git.listBranchesWithRemotes(sessionId)
     const current = gitInfo.currentBranch
-    const sorted = current ? [current, ...list.filter((b) => b !== current)] : list
-    setBranches(sorted)
+
+    // Sort local branches with current branch first
+    const sortedLocal = current
+      ? [current, ...groups.local.filter((b) => b !== current)]
+      : groups.local
+    const sortedGroups = { local: sortedLocal, remote: groups.remote }
+
+    setBranchGroups(sortedGroups)
   }
 
   const checkout = async (branch: string): Promise<void> => {
@@ -127,6 +152,41 @@ export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX
     toast({ type: 'info', message: `Switched to ${branch}` })
   }
 
+  const checkoutRemote = async (remoteBranch: string): Promise<void> => {
+    // Extract branch name by removing 'origin/' prefix
+    const branchName = remoteBranch.replace(/^origin\//, '')
+    setLoading(true)
+    setIsOpen(false)
+
+    // Check if local branch exists
+    const localBranchExists = branchGroups.local.includes(branchName)
+
+    if (localBranchExists) {
+      // If local branch exists, just switch to it
+      const result = await window.deck.git.checkout(sessionId, branchName)
+      if (result.ok) {
+        setGitInfo(sessionId, { ...gitInfo, currentBranch: branchName, head: null })
+        toast({ type: 'info', message: `Switched to ${branchName}` })
+      } else {
+        toast({ type: 'error', message: `Git error: ${result.error ?? 'unknown'}` })
+      }
+    } else {
+      // If local branch doesn't exist, git will auto-track when checking out
+      const result = await window.deck.git.checkout(sessionId, branchName)
+      if (result.ok) {
+        setGitInfo(sessionId, { ...gitInfo, currentBranch: branchName, head: null })
+        toast({
+          type: 'info',
+          message: `Created and switched to ${branchName} (tracking ${remoteBranch})`
+        })
+      } else {
+        toast({ type: 'error', message: `Git error: ${result.error ?? 'unknown'}` })
+      }
+    }
+
+    setLoading(false)
+  }
+
   const doStashAndSwitch = async (branch: string): Promise<void> => {
     setLoading(true)
     const result = await window.deck.git.stashAndCheckout(sessionId, branch)
@@ -157,7 +217,13 @@ export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX
       const idx = highlightIdx >= 0 ? highlightIdx : 0
       const target = filteredBranches[idx]
       if (!target) return
-      checkout(target)
+
+      // Determine if this is a remote branch (starts with 'origin/')
+      if (target.startsWith('origin/')) {
+        checkoutRemote(target)
+      } else {
+        checkout(target)
+      }
     } else if (e.key === 'Escape') {
       e.preventDefault()
       setIsOpen(false)
@@ -247,34 +313,84 @@ export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX
             />
           </div>
           <div className="overflow-y-auto py-1">
-            {filteredBranches.length === 0 ? (
+            {allBranches.length === 0 ? (
               <div className="px-3 py-3 text-center font-mono text-[12px] text-op-zinc-500">
-                {branches.length === 0 ? '' : 'No branches match'}
+                Loading...
               </div>
             ) : (
-              filteredBranches.map((b, index) => {
-                const isCurrent = b === gitInfo.currentBranch
-                const isHighlighted = index === highlightIdx
-                return (
-                  <button
-                    key={b}
-                    ref={isHighlighted ? highlightedItemRef : undefined}
-                    onClick={() => checkout(b)}
-                    className={`flex w-full items-center gap-2 px-3 py-1.5 text-left font-mono text-[12px] transition-colors hover:bg-op-zinc-800 ${
-                      isHighlighted
-                        ? 'bg-op-zinc-800 text-op-zinc-100'
-                        : isCurrent
-                          ? 'text-op-zinc-100'
-                          : 'text-op-zinc-400'
-                    }`}
-                  >
-                    <span className="w-3 flex-shrink-0 text-center">{isCurrent ? '●' : ''}</span>
-                    <span className="truncate" title={b}>
-                      {b}
-                    </span>
-                  </button>
-                )
-              })
+              <>
+                {/* Local branches section */}
+                {filteredLocal.length > 0 && (
+                  <>
+                    <div className="px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-op-zinc-500 border-b border-op-border">
+                      Local
+                    </div>
+                    {filteredLocal.map((b, index) => {
+                      const isCurrent = b === gitInfo.currentBranch
+                      // Calculate index in the combined filtered list
+                      const combinedIndex = index
+                      const isHighlighted = combinedIndex === highlightIdx
+                      return (
+                        <button
+                          key={`local-${b}`}
+                          ref={isHighlighted ? highlightedItemRef : undefined}
+                          onClick={() => checkout(b)}
+                          className={`flex w-full items-center gap-2 px-3 py-1.5 text-left font-mono text-[12px] transition-colors hover:bg-op-zinc-800 ${
+                            isHighlighted
+                              ? 'bg-op-zinc-800 text-op-zinc-100'
+                              : isCurrent
+                                ? 'text-op-zinc-100'
+                                : 'text-op-zinc-400'
+                          }`}
+                        >
+                          <span className="w-3 flex-shrink-0 text-center">
+                            {isCurrent ? '●' : ''}
+                          </span>
+                          <span className="truncate" title={b}>
+                            {b}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </>
+                )}
+
+                {/* Remote branches section */}
+                {filteredRemote.length > 0 && (
+                  <>
+                    <div className="px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-op-zinc-500 border-b border-op-border">
+                      Remote
+                    </div>
+                    {filteredRemote.map((b, index) => {
+                      const localLength = filteredLocal.length
+                      const combinedIndex = localLength + index
+                      const isHighlighted = combinedIndex === highlightIdx
+                      return (
+                        <button
+                          key={`remote-${b}`}
+                          ref={isHighlighted ? highlightedItemRef : undefined}
+                          onClick={() => checkoutRemote(b)}
+                          className={`flex w-full items-center gap-2 px-3 py-1.5 text-left font-mono text-[12px] transition-colors hover:bg-op-zinc-800 ${
+                            isHighlighted ? 'bg-op-zinc-800 text-op-zinc-100' : 'text-op-zinc-400'
+                          }`}
+                        >
+                          <span className="w-3 flex-shrink-0"></span>
+                          <span className="truncate" title={b}>
+                            {b}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </>
+                )}
+
+                {/* No matches message */}
+                {filteredLocal.length === 0 && filteredRemote.length === 0 && (
+                  <div className="px-3 py-3 text-center font-mono text-[12px] text-op-zinc-500">
+                    No branches match
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
