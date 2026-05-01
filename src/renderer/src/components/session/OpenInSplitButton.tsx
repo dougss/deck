@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/DropdownMenu'
-import { ChevronDown, Code, SquareCode, FolderOpen, Zap, Wrench } from 'lucide-react'
+import { ChevronDown, Code, SquareCode, Zap, Wrench } from 'lucide-react'
 
 const baseButtonClasses =
   'inline-flex items-center justify-center gap-2 font-body font-medium rounded-md transition-colors duration-75 outline-none border ' +
@@ -41,9 +41,38 @@ function getEditorLabel(editor: EditorPreset): string {
   }
 }
 
-function getEditorIcon(): React.ReactNode {
-  // Icons can be added here if needed
-  return null
+function getEditorIcon(editor: EditorPreset): React.ReactNode {
+  switch (editor) {
+    case 'zed':
+      return <Zap size={14} strokeWidth={1.75} />
+    case 'cursor':
+      return <Code size={14} strokeWidth={1.75} />
+    case 'vscode':
+      return <SquareCode size={14} strokeWidth={1.75} />
+    case 'fork':
+      // Custom SVG for Fork since it's not in lucide-react
+      return (
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polygon points="12 12 18 6 12 0 6 6 12 12" />
+          <path d="M12 22V12" />
+          <path d="M8 6H4" />
+          <path d="M16 6h4" />
+        </svg>
+      )
+    case 'custom':
+      return <Wrench size={14} strokeWidth={1.75} />
+    default:
+      return <Zap size={14} strokeWidth={1.75} />
+  }
 }
 
 export function OpenInSplitButton({
@@ -51,7 +80,6 @@ export function OpenInSplitButton({
   customEditorCommand
 }: OpenInSplitButtonProps): React.JSX.Element {
   const [lastEditor, setLastEditor] = useLastOpenInEditor()
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const disabled = !session.cwd || session.cwd.trim() === ''
 
   const handlePrimaryClick = async (): Promise<void> => {
@@ -75,11 +103,10 @@ export function OpenInSplitButton({
 
     await window.deck.system.openInEditor({ workspacePath: session.cwd, editor })
     setLastEditor(editor)
-    setIsDropdownOpen(false)
   }
 
   const editorLabel = getEditorLabel(lastEditor)
-  const icon = getEditorIcon()
+  const icon = getEditorIcon(lastEditor) // Fixed: now passing the editor to get the correct icon
 
   return (
     <div className="flex items-center h-7">
@@ -96,7 +123,7 @@ export function OpenInSplitButton({
 
         <div className="shrink-0 w-px h-5 self-center bg-op-border" />
 
-        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               disabled={disabled}
@@ -108,20 +135,20 @@ export function OpenInSplitButton({
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => void handleSelectEditor('zed')}>Zed</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => void handleSelectEditor('cursor')}>
+            <DropdownMenuItem onSelect={() => void handleSelectEditor('zed')}>Zed</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => void handleSelectEditor('cursor')}>
               Cursor
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => void handleSelectEditor('vscode')}>
+            <DropdownMenuItem onSelect={() => void handleSelectEditor('vscode')}>
               VS Code
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => void handleSelectEditor('fork')}>
+            <DropdownMenuItem onSelect={() => void handleSelectEditor('fork')}>
               Fork
             </DropdownMenuItem>
             {customEditorCommand && customEditorCommand.trim() !== '' && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => void handleSelectEditor('custom')}>
+                <DropdownMenuItem onSelect={() => void handleSelectEditor('custom')}>
                   Custom
                 </DropdownMenuItem>
               </>
