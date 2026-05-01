@@ -1,9 +1,9 @@
+import { useState, useEffect, useCallback } from 'react'
 import { useActiveSession, useActiveWorkspace, useGitInfo } from '@/stores/deck'
 import { ConfigBadge, type ConfigBadgeVariant } from '@/components/ui'
 import { BranchSwitcher } from './BranchSwitcher'
 import { OpenInSplitButton } from './OpenInSplitButton'
-import { useSettings } from '@/hooks/useSettings'
-import type { SessionType } from '../../../../shared/ipc'
+import type { DeckSettings, SessionType } from '../../../../shared/ipc'
 
 function getConfigLabel(sessionType: SessionType): { label: string; variant: ConfigBadgeVariant } {
   if (sessionType === 'shell') return { label: 'shell', variant: 'neutral' }
@@ -16,7 +16,19 @@ export function SessionHeader(): React.JSX.Element {
   const workspace = useActiveWorkspace()
   const gitInfo = useGitInfo(session?.id ?? '')
 
-  const settings = useSettings()
+  const [settings, setSettings] = useState<DeckSettings | null>(null)
+
+  const refreshSettings = useCallback(async () => {
+    const s = await window.deck.settings.get()
+    setSettings(s)
+  }, [])
+
+  useEffect(() => {
+    const fetchSettings = async (): Promise<void> => {
+      await refreshSettings()
+    }
+    void fetchSettings()
+  }, [refreshSettings]) // Include refreshSettings in dependency array
 
   if (!session || !workspace) {
     return (
