@@ -98,37 +98,38 @@ export function SessionSplit({
         />
       </div>
       {embeddedOn && (
-        <>
-          <div
-            style={{
-              position: 'absolute',
-              top: `${topPct}%`,
-              left: 0,
-              right: 0,
-              transform: 'translateY(-50%)'
-            }}
-          >
-            <ResizableSplitHandle onDrag={handleDrag} onCommit={handleCommit} />
-          </div>
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: `${bottomPct}%`
-            }}
-          >
-            <EmbeddedTerminal
-              sessionId={sessionId}
-              cwd={cwd}
-              visible={visible}
-              focused={focus === 'embedded'}
-              onFocusRequest={requestEmbeddedFocus}
-            />
-          </div>
-        </>
+        <div
+          style={{
+            position: 'absolute',
+            top: `${topPct}%`,
+            left: 0,
+            right: 0,
+            transform: 'translateY(-50%)'
+          }}
+        >
+          <ResizableSplitHandle onDrag={handleDrag} onCommit={handleCommit} />
+        </div>
       )}
+      {/* EmbeddedTerminal stays mounted while the session is attached so the
+          PTY survives toggle off/on. Visibility is controlled via CSS. */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: `${bottomPct}%`,
+          display: embeddedOn ? 'block' : 'none'
+        }}
+      >
+        <EmbeddedTerminal
+          sessionId={sessionId}
+          cwd={cwd}
+          visible={visible && embeddedOn}
+          focused={focus === 'embedded'}
+          onFocusRequest={requestEmbeddedFocus}
+        />
+      </div>
     </div>
   )
 }
