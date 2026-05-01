@@ -158,7 +158,9 @@ export class SessionManager extends EventEmitter<EventMap> {
         ? 'ssh'
         : row.type === 'shell'
           ? 'shell'
-          : 'claude-code') as SessionType,
+          : row.type === 'gemini'
+            ? 'gemini'
+            : 'claude-code') as SessionType,
       claudeSessionId: row.claude_session_id ?? null,
       parentSessionId: row.parent_session_id ?? null,
       createdAt: row.created_at,
@@ -189,7 +191,13 @@ export class SessionManager extends EventEmitter<EventMap> {
     const name = validateNonEmpty('name', req.name)
     const cwd = validateNonEmpty('cwd', req.cwd)
     const type: SessionType =
-      req.type === 'ssh' ? 'ssh' : req.type === 'shell' ? 'shell' : 'claude-code'
+      req.type === 'ssh'
+        ? 'ssh'
+        : req.type === 'shell'
+          ? 'shell'
+          : req.type === 'gemini'
+            ? 'gemini'
+            : 'claude-code'
     const subText = req.subText ?? ''
     const kind = req.kind ?? 'executor'
 

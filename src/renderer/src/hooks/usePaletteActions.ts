@@ -73,6 +73,17 @@ export function usePaletteActions(): PaletteAction[] {
           openNewSessionDialog(wsId, 'shell')
         }
       },
+      {
+        id: 'new-gemini-session',
+        label: 'New Gemini session',
+        category: 'sessions',
+        handler: () => {
+          const wsId = targetWorkspaceId()
+          if (!wsId) return
+          closePalette()
+          openNewSessionDialog(wsId, 'gemini')
+        }
+      },
       ...sessions.map((s) => ({
         id: `switch-session-${s.id}`,
         label: `Switch to ${s.name}`,
