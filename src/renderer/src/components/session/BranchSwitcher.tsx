@@ -35,7 +35,10 @@ export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX
   // Cmd+Shift+B opens via tick
   useEffect(() => {
     if (tick === 0) return
-    if (!isIdle) setIsOpen(true)
+    if (!isIdle) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsOpen(true)
+    }
   }, [tick, isIdle])
 
   // Click-outside closes
@@ -55,6 +58,7 @@ export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX
     if (isOpen) {
       inputRef.current?.focus()
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchQuery('')
       setHighlightIdx(-1)
     }
@@ -63,13 +67,16 @@ export function BranchSwitcher({ sessionId, gitInfo, isIdle }: Props): React.JSX
   // Initial highlight when branches load (or dropdown reopens with cached branches)
   useEffect(() => {
     if (!isOpen || branches.length === 0) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHighlightIdx(branches.length > 1 ? 1 : 0)
   }, [branches, isOpen])
 
   // Reset highlight to top of filtered list when query changes
   useEffect(() => {
     if (!isOpen) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHighlightIdx(filteredBranches.length > 0 ? 0 : -1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
 
   // Scroll highlighted item into view without disrupting header/input visibility

@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { ResizablePanel } from '../ResizablePanel'
 import { Sidebar } from '../sidebar/Sidebar'
 import { SessionHeader } from '../session/SessionHeader'
@@ -26,7 +26,9 @@ export function AppBody({ children }: AppBodyProps): React.JSX.Element {
   const activePanel = useDeckStore((s) => s.activeRightPanel)
   const isPinned = pinned && activePanel !== null
   const isPinnedRef = useRef(isPinned)
-  isPinnedRef.current = isPinned
+  useEffect(() => {
+    isPinnedRef.current = isPinned
+  }, [isPinned])
 
   const [rpWidth, setRpWidth] = useState<number>(loadRpWidth)
   const mainContentRef = useRef<HTMLDivElement>(null)

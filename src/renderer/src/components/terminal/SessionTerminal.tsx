@@ -33,7 +33,9 @@ export function SessionTerminal({
   const termRef = useRef<XTerm | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
   const visibleRef = useRef(visible)
-  visibleRef.current = visible
+  useEffect(() => {
+    visibleRef.current = visible
+  }, [visible])
 
   useEffect(() => {
     const container = containerRef.current

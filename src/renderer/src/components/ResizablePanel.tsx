@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useEffect } from 'react'
 import { useResizablePanelWidth } from '@/hooks/useResizablePanelWidth'
 
 export interface ResizablePanelProps {
@@ -38,11 +38,18 @@ export function ResizablePanel({
   const startWidthRef = useRef<number>(0)
   const onWidthChangeRef = useRef(onWidthChange)
   const onWidthCommitRef = useRef(onWidthCommit)
-  onWidthChangeRef.current = onWidthChange
-  onWidthCommitRef.current = onWidthCommit
+  const handleMouseMoveRef = useRef<(e: MouseEvent) => void>(() => {})
+  const handleMouseUpRef = useRef<() => void>(() => {})
+
+  useEffect(() => {
+    onWidthChangeRef.current = onWidthChange
+    onWidthCommitRef.current = onWidthCommit
+  }, [onWidthChange, onWidthCommit])
 
   // Keep widthRef in sync with committed state (e.g. window resize clamp)
-  widthRef.current = width
+  useEffect(() => {
+    widthRef.current = width
+  }, [width])
 
   const getMax = useCallback((): number => {
     return getMaxWidth ? getMaxWidth() : Math.max(minWidth, Math.floor(window.innerWidth * 0.5))
@@ -63,27 +70,29 @@ export function ResizablePanel({
   const handleMouseUp = useCallback((): void => {
     if (!isDragging.current) return
     isDragging.current = false
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', handleMouseUp)
+    document.removeEventListener('mousemove', handleMouseMoveRef.current)
+    document.removeEventListener('mouseup', handleMouseUpRef.current)
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
     setWidthCommitted(widthRef.current)
     onWidthCommitRef.current?.(widthRef.current)
-  }, [handleMouseMove, setWidthCommitted])
+  }, [setWidthCommitted])
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent): void => {
-      e.preventDefault()
-      isDragging.current = true
-      startXRef.current = e.clientX
-      startWidthRef.current = widthRef.current
-      document.body.style.cursor = 'ew-resize'
-      document.body.style.userSelect = 'none'
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
-    },
-    [handleMouseMove, handleMouseUp]
-  )
+  useEffect(() => {
+    handleMouseMoveRef.current = handleMouseMove
+    handleMouseUpRef.current = handleMouseUp
+  }, [handleMouseMove, handleMouseUp])
+
+  const handleMouseDown = useCallback((e: React.MouseEvent): void => {
+    e.preventDefault()
+    isDragging.current = true
+    startXRef.current = e.clientX
+    startWidthRef.current = widthRef.current
+    document.body.style.cursor = 'ew-resize'
+    document.body.style.userSelect = 'none'
+    document.addEventListener('mousemove', handleMouseMoveRef.current)
+    document.addEventListener('mouseup', handleMouseUpRef.current)
+  }, [])
 
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent): void => {

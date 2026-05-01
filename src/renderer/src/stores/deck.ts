@@ -179,7 +179,8 @@ export const useDeckStore = create<DeckState>()(
                   )
                 }
               }
-              const { [event.id]: _removed, ...restExpanded } = state.expandedWorkspaceIds
+              const restExpanded = { ...state.expandedWorkspaceIds }
+              delete restExpanded[event.id]
               return {
                 workspaces: state.workspaces.filter((w) => w.id !== event.id),
                 expandedWorkspaceIds: restExpanded
