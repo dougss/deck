@@ -16,6 +16,38 @@ interface SessionItemProps {
   onDelete: () => void
 }
 
+function getStatusBadgeVariant(
+  session: Session,
+  notificationState: 'idle' | 'pending' | 'error' = 'idle'
+): StatusDotVariant {
+  // Map session states to visual status indicators:
+  // - Green for 'working'
+  // - Yellow for 'idle'
+  // - Red for 'failed'
+  // - Gray for 'detached'
+
+  // Failed state: when notification indicates error or subText indicates failure
+  if (
+    notificationState === 'error' ||
+    (session.subText && session.subText.toLowerCase().includes('failed'))
+  ) {
+    return 'error' // Red for failed
+  }
+
+  // Detached state: when session is idle and has no active PTY connection
+  if (session.status === 'idle' && session.ptyId === null) {
+    return 'idle' // Gray for detached
+  }
+
+  // Working state: currently active
+  if (session.status === 'working') {
+    return 'working' // Green for working
+  }
+
+  // Default idle state: yellow
+  return 'awaiting' // Yellow for idle
+}
+
 export function SessionItem({
   session,
   isActive,
@@ -36,6 +68,8 @@ export function SessionItem({
   } else {
     dotVariant = 'idle'
   }
+
+  // We'll pass notification state to the badge function to have complete status info
 
   const nameEdit = useInlineEdit(session.name)
   const subTextEdit = useInlineEdit(session.subText)
@@ -142,7 +176,16 @@ export function SessionItem({
               {session.type === 'ssh' && (
                 <Server size={9} strokeWidth={1.75} className="text-op-zinc-600 flex-shrink-0" />
               )}
-              {session.name}
+              <div className="flex items-center gap-1.5">
+                <span>{session.name}</span>
+                {/* Status badge next to the name */}
+                <div className="flex-shrink-0">
+                  <StatusDot
+                    variant={getStatusBadgeVariant(session, notificationState)}
+                    size="sm"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
