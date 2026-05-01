@@ -160,7 +160,10 @@ export function EmbeddedTerminal({
         data-embedded-session-id={sessionId}
         style={{
           position: 'absolute',
-          inset: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: '22px',
           display: visible ? 'block' : 'none'
         }}
       />
