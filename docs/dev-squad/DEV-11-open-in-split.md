@@ -50,27 +50,32 @@ Substituir o action button morto ("More options") do `SessionHeader` por um spli
 ## Files Affected
 
 ### Create
+
 - `src/renderer/src/hooks/useLastOpenInEditor.ts` — Hook para ler/escrever `localStorage['deck:lastOpenInEditor']` com validação contra `EditorPreset` e SSR-safety.
 - `src/renderer/src/components/ui/DropdownMenu.tsx` — Wrapper Radix `@radix-ui/react-dropdown-menu` espelhando `ContextMenu.tsx` (exports: DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator).
 - `src/renderer/src/components/session/OpenInSplitButton.tsx` — Componente split button com PrimaryButton (último editor) + divider + DropdownTrigger (chevron).
 
 ### Modify
+
 - `src/renderer/src/components/session/SessionHeader.tsx` — Remover `IconButton "More options"` (linhas 81-91 aproximadamente); inserir `<OpenInSplitButton session={session} customEditorCommand={...} />` à direita do `ConfigBadge`. Buscar `customEditorCommand` da mesma fonte do sidebar (provavelmente `useDeckStore` settings).
 - `src/renderer/src/components/ui/index.ts` — Re-exportar DropdownMenu e componentes relacionados.
 - `package.json` — Adicionar `@radix-ui/react-dropdown-menu`.
 - `pnpm-lock.yaml` — Gerado automaticamente por `pnpm install`.
 
 ### Delete
+
 - Nenhum.
 
 ## Test Plan
 
 ### Automated (Developer + QA run literally)
+
 - `pnpm typecheck` → exit 0
 - `pnpm lint` → exit 0, no new warnings
 - `pnpm format` → exit 0 (ou auto-fix se houver)
 
 ### Manual (QA executes step-by-step)
+
 1. **Default state** — Fresh install / `localStorage` limpo. Header mostra "Zed" + chevron. Clicar direto no "Zed" → Zed abre no `cwd` da sessão. `localStorage['deck:lastOpenInEditor']` = `'zed'`.
 2. **Trocar via dropdown** — Clicar no chevron → selecionar "Cursor" → Cursor abre no `cwd`, label do botão principal muda para "Cursor", `localStorage` atualiza para `'cursor'`. Reload da janela mantém preferência.
 3. **Custom editor (sem configuração)** — Sem `customEditorCommand` definido nas settings: item "Custom" NÃO aparece no dropdown.
@@ -87,4 +92,4 @@ Substituir o action button morto ("More options") do `SessionHeader` por um spli
 2. **Label do PrimaryButton** — Confirmado: apenas nome do editor (ex: "Zed"); tooltip explica "Open in <Editor>".
 3. **Custom sem `customEditorCommand`** — Confirmado: PrimaryButton mostra "Zed" (auto-cura ao primeiro clique manual no dropdown).
 
-*Todas as open questions já foram decididas na spec original.*
+_Todas as open questions já foram decididas na spec original._
