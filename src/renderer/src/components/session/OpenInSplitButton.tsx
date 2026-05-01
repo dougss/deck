@@ -121,7 +121,7 @@ export function OpenInSplitButton({
           <span>{editorLabel}</span>
         </button>
 
-        <div className="shrink-0 w-px h-5 self-center bg-op-border" />
+        <div className="w-px h-5 bg-op-border self-center" />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

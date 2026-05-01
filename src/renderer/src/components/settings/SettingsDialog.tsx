@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSettings } from '../../hooks/useSettings'
 import { HookInstallSection } from './HookInstallSection'
 import {
   Dialog,
@@ -18,6 +19,8 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React.JSX.Element {
+  const [, refreshGlobalSettings] = useSettings()
+
   const [customCommand, setCustomCommand] = useState('')
   const [executorCommand, setExecutorCommand] = useState('claude')
   const [ready, setReady] = useState(false)
@@ -25,11 +28,13 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    window.deck.settings.get().then((s) => {
+    const loadSettings = async (): Promise<void> => {
+      const s = await window.deck.settings.get()
       setCustomCommand(s.customEditorCommand ?? '')
       setExecutorCommand(s.defaultExecutorCommand)
       setReady(true)
-    })
+    }
+    void loadSettings()
   }, [])
 
   function validate(): string | null {
@@ -52,6 +57,7 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
         customEditorCommand: customCommand.trim() || null,
         defaultExecutorCommand: executorCommand.trim()
       })
+      await refreshGlobalSettings()
       await onSaved()
       onClose()
     } catch {
