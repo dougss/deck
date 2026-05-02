@@ -45,6 +45,9 @@ export const IPC = {
   SHORTCUT_SWITCH_SESSION: 'shortcut:switch-session',
   SHORTCUT_FOCUS_SEARCH: 'shortcut:focus-search',
   SHORTCUT_TOGGLE_PANEL: 'shortcut:toggle-panel',
+  SHORTCUT_BRANCH_SWITCHER: 'shortcut:branch-switcher',
+  SHORTCUT_COMMAND_PALETTE: 'shortcut:command-palette',
+  SHORTCUT_TOGGLE_EMBEDDED: 'shortcut:toggle-embedded',
   SETTINGS_GET: 'settings:get',
   SETTINGS_SET: 'settings:set',
   SYSTEM_OPEN_IN_EDITOR: 'system:open-in-editor',
@@ -55,12 +58,10 @@ export const IPC = {
   HOOKS_UNINSTALL: 'hooks:uninstall',
   GIT_GET_INFO: 'git:get-info',
   GIT_LIST_BRANCHES: 'git:list-branches',
+  GIT_LIST_BRANCHES_WITH_REMOTES: 'git:list-branches-with-remotes',
   GIT_CHECKOUT: 'git:checkout',
   GIT_STASH_CHECKOUT: 'git:stash-checkout',
   GIT_INFO_UPDATED: 'git:info-updated',
-  SHORTCUT_BRANCH_SWITCHER: 'shortcut:branch-switcher',
-  SHORTCUT_COMMAND_PALETTE: 'shortcut:command-palette',
-  SHORTCUT_TOGGLE_EMBEDDED: 'shortcut:toggle-embedded',
   SSH_LIST_HOSTS: 'ssh:list-hosts'
 } as const
 
@@ -318,6 +319,15 @@ export interface GitListBranchesRequest {
   sessionId: SessionId
 }
 
+export interface GitListBranchesWithRemotesRequest {
+  sessionId: SessionId
+}
+
+export interface GitBranchGroups {
+  local: string[]
+  remote: string[]
+}
+
 export interface GitCheckoutRequest {
   sessionId: SessionId
   branch: string
@@ -331,6 +341,7 @@ export interface GitInfoUpdatedEvent {
 export interface DeckGitApi {
   getInfo(sessionId: SessionId): Promise<GitInfo>
   listBranches(sessionId: SessionId): Promise<string[]>
+  listBranchesWithRemotes(sessionId: SessionId): Promise<GitBranchGroups>
   checkout(sessionId: SessionId, branch: string): Promise<GitCheckoutResult>
   stashAndCheckout(sessionId: SessionId, branch: string): Promise<GitCheckoutResult>
   onInfoUpdated(cb: (event: GitInfoUpdatedEvent) => void): () => void

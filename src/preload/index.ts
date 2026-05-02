@@ -280,6 +280,9 @@ const deck: DeckApi = {
     listBranches(sessionId: SessionId) {
       return ipcRenderer.invoke(IPC.GIT_LIST_BRANCHES, { sessionId })
     },
+    listBranchesWithRemotes(sessionId: SessionId) {
+      return ipcRenderer.invoke(IPC.GIT_LIST_BRANCHES_WITH_REMOTES, { sessionId })
+    },
     checkout(sessionId: SessionId, branch: string) {
       return ipcRenderer.invoke(IPC.GIT_CHECKOUT, { sessionId, branch })
     },
