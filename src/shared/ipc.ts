@@ -2,7 +2,7 @@ export type PtyId = string
 export type WorkspaceId = string
 export type SessionId = string
 export type SessionStatus = 'idle' | 'working'
-export type SessionType = 'claude-code' | 'shell' | 'ssh'
+export type SessionType = 'claude-code' | 'shell' | 'ssh' | 'codex'
 export type NotificationState = 'idle' | 'pending' | 'error'
 
 export interface GitInfo {
@@ -274,6 +274,7 @@ export interface DeckSettings {
   plannerPrompt: string | null
   plannerDisallowedTools: string | null
   plannerAllowedTools: string | null
+  codexPath?: string
 }
 
 export interface OpenInEditorRequest {

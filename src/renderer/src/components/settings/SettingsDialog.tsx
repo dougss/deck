@@ -23,6 +23,7 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
 
   const [customCommand, setCustomCommand] = useState('')
   const [executorCommand, setExecutorCommand] = useState('claude')
+  const [codexPath, setCodexPath] = useState('')
   const [ready, setReady] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,6 +33,7 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
       const s = await window.deck.settings.get()
       setCustomCommand(s.customEditorCommand ?? '')
       setExecutorCommand(s.defaultExecutorCommand)
+      setCodexPath(s.codexPath ?? '')
       setReady(true)
     }
     void loadSettings()
@@ -41,6 +43,8 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
     if (customCommand.trim() && METACHAR.test(customCommand))
       return 'Command contains invalid characters (; & | $ > < ` \\).'
     if (!executorCommand.trim()) return 'Executor command is required.'
+    if (codexPath.trim() && METACHAR.test(codexPath))
+      return 'Codex path contains invalid characters (; & | $ > < ` \\).'
     return null
   }
 
@@ -55,7 +59,8 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
     try {
       await window.deck.settings.set({
         customEditorCommand: customCommand.trim() || null,
-        defaultExecutorCommand: executorCommand.trim()
+        defaultExecutorCommand: executorCommand.trim(),
+        codexPath: codexPath.trim()
       })
       await refreshGlobalSettings()
       await onSaved()
@@ -123,6 +128,30 @@ export function SettingsDialog({ onSaved, onClose }: SettingsDialogProps): React
               />
               <p className="font-body text-[11px] text-op-zinc-500">
                 Command used when spawning new executor sessions.
+              </p>
+            </div>
+          </div>
+
+          {/* Codex section */}
+          <div className="flex flex-col gap-3">
+            <p className="font-body text-[11px] font-semibold tracking-[0.08em] uppercase text-op-zinc-500">
+              Codex
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <label className="font-body text-[12px] font-medium text-op-zinc-400">
+                Codex path
+              </label>
+              <input
+                type="text"
+                value={codexPath}
+                onChange={(e) => setCodexPath(e.target.value)}
+                disabled={!ready}
+                placeholder="codex"
+                className="h-9 bg-op-zinc-900 border border-op-zinc-800 rounded-[7px] px-3 text-op-zinc-200 font-mono text-[13px] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-op-zinc-600 focus:border-accent focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p className="font-body text-[11px] text-op-zinc-500">
+                Binary name or path used when spawning new Codex sessions. Defaults to{' '}
+                <span className="font-mono">codex</span> when blank.
               </p>
             </div>
           </div>
