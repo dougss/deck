@@ -16,7 +16,13 @@ const LAST_TYPE_KEY = 'deck:lastSessionType'
 
 function getLastType(): SessionType {
   const stored = localStorage.getItem(LAST_TYPE_KEY)
-  if (stored === 'shell' || stored === 'claude-code' || stored === 'ssh' || stored === 'codex' || stored === 'gemini')
+  if (
+    stored === 'shell' ||
+    stored === 'claude-code' ||
+    stored === 'ssh' ||
+    stored === 'codex' ||
+    stored === 'gemini'
+  )
     return stored
   return 'claude-code'
 }

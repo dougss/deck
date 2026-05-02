@@ -160,9 +160,9 @@ export class SessionManager extends EventEmitter<EventMap> {
           ? 'shell'
           : row.type === 'gemini'
             ? 'gemini'
-          : row.type === 'codex'
-            ? 'codex'
-            : 'claude-code') as SessionType,
+            : row.type === 'codex'
+              ? 'codex'
+              : 'claude-code') as SessionType,
       claudeSessionId: row.claude_session_id ?? null,
       parentSessionId: row.parent_session_id ?? null,
       createdAt: row.created_at,
@@ -199,9 +199,9 @@ export class SessionManager extends EventEmitter<EventMap> {
           ? 'shell'
           : req.type === 'gemini'
             ? 'gemini'
-          : req.type === 'codex'
-            ? 'codex'
-            : 'claude-code'
+            : req.type === 'codex'
+              ? 'codex'
+              : 'claude-code'
     const subText = req.subText ?? ''
     const kind = req.kind ?? 'executor'
 
