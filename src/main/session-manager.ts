@@ -158,6 +158,8 @@ export class SessionManager extends EventEmitter<EventMap> {
         ? 'ssh'
         : row.type === 'shell'
           ? 'shell'
+          : row.type === 'gemini'
+            ? 'gemini'
           : row.type === 'codex'
             ? 'codex'
             : 'claude-code') as SessionType,
@@ -195,6 +197,8 @@ export class SessionManager extends EventEmitter<EventMap> {
         ? 'ssh'
         : req.type === 'shell'
           ? 'shell'
+          : req.type === 'gemini'
+            ? 'gemini'
           : req.type === 'codex'
             ? 'codex'
             : 'claude-code'

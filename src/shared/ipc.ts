@@ -2,7 +2,7 @@ export type PtyId = string
 export type WorkspaceId = string
 export type SessionId = string
 export type SessionStatus = 'idle' | 'working'
-export type SessionType = 'claude-code' | 'shell' | 'ssh' | 'codex'
+export type SessionType = 'claude-code' | 'shell' | 'ssh' | 'codex' | 'gemini'
 export type NotificationState = 'idle' | 'pending' | 'error'
 
 export interface GitInfo {

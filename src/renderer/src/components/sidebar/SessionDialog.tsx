@@ -16,7 +16,7 @@ const LAST_TYPE_KEY = 'deck:lastSessionType'
 
 function getLastType(): SessionType {
   const stored = localStorage.getItem(LAST_TYPE_KEY)
-  if (stored === 'shell' || stored === 'claude-code' || stored === 'ssh' || stored === 'codex')
+  if (stored === 'shell' || stored === 'claude-code' || stored === 'ssh' || stored === 'codex' || stored === 'gemini')
     return stored
   return 'claude-code'
 }
@@ -24,6 +24,7 @@ function getLastType(): SessionType {
 function autoName(workspace: Workspace, type: SessionType, sshAlias?: string): string {
   if (type === 'shell') return `${workspace.name}/shell`
   if (type === 'ssh') return `${workspace.name}/ssh:${sshAlias ?? ''}`
+  if (type === 'gemini') return `${workspace.name}/gemini`
   if (type === 'codex') return `${workspace.name}/codex`
   return `${workspace.name}/new-session`
 }
@@ -54,7 +55,8 @@ export function SessionDialog({
   const [nameDirty, setNameDirty] = useState(false)
   const [cwd, setCwd] = useState(initialWorkspace.path)
   const [cwdDirty, setCwdDirty] = useState(false)
-  const [command, setCommand] = useState(defaultCommand)
+  const [command, setCommand] = useState(initialType === 'gemini' ? 'gemini' : defaultCommand)
+  const [commandDirty, setCommandDirty] = useState(false)
   const [subText, setSubText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -76,6 +78,9 @@ export function SessionDialog({
 
   function handleTypeChange(newType: SessionType): void {
     setType(newType)
+    if (!commandDirty) {
+      setCommand(newType === 'gemini' ? 'gemini' : defaultCommand)
+    }
   }
 
   function handleSshAliasChange(alias: string): void {
@@ -101,7 +106,8 @@ export function SessionDialog({
     if (!name.trim()) return 'Name is required.'
     if (name.trim().length > 60) return 'Name must be 60 characters or fewer.'
     if (type !== 'ssh' && !cwd.trim()) return 'Working directory is required.'
-    if (type === 'claude-code' && !command.trim()) return 'Command is required.'
+    if ((type === 'claude-code' || type === 'gemini') && !command.trim())
+      return 'Command is required.'
     if (type === 'ssh' && !sshAlias) return 'Select a host.'
     return null
   }
@@ -180,6 +186,11 @@ export function SessionDialog({
                     t: 'ssh' as SessionType,
                     label: 'SSH',
                     icon: <Server size={14} strokeWidth={1.75} />
+                  },
+                  {
+                    t: 'gemini' as SessionType,
+                    label: 'Gemini',
+                    icon: <Sparkles size={14} strokeWidth={1.75} />
                   }
                 ] as const
               ).map(({ t, label, icon }) => (
@@ -303,8 +314,8 @@ export function SessionDialog({
               </div>
             )}
 
-            {/* Command (Claude Code only) */}
-            {type === 'claude-code' && (
+            {/* Command (Claude Code / Gemini) */}
+            {(type === 'claude-code' || type === 'gemini') && (
               <div className="flex flex-col gap-1.5">
                 <label className="font-body text-[12px] font-medium text-op-zinc-400">
                   Command
@@ -312,8 +323,11 @@ export function SessionDialog({
                 <input
                   type="text"
                   value={command}
-                  onChange={(e) => setCommand(e.target.value)}
-                  placeholder="claude"
+                  onChange={(e) => {
+                    setCommand(e.target.value)
+                    setCommandDirty(true)
+                  }}
+                  placeholder={type === 'gemini' ? 'gemini' : 'claude'}
                   className="h-9 bg-op-zinc-900 border border-op-zinc-800 rounded-[7px] px-3 text-op-zinc-200 font-mono text-[13px] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-op-zinc-600 focus:border-accent focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)]"
                 />
               </div>
