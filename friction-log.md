@@ -15,7 +15,7 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 
 ## Pendente
 
-- 2026-04-29 — Foco não alterna ao clicar em outro pane vindo de outro app (precisa 2 cliques)
+(vazio)
 
 ## Em andamento
 
@@ -23,6 +23,7 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 
 ## Resolvido recente
 
+- 2026-04-29 — Foco não alterna ao clicar em outro pane vindo de outro app (precisa 2 cliques) → vNEXT (commit hash a preencher após commit)
 - 2026-04-30 — Embedded terminal panel (split horizontal Ctrl+\` / Cmd+J) → v0.6.0 ([#24](https://github.com/dougss/deck/issues/24), spec `docs/deck-specs/2026-04-30-embedded-terminal-panel.md`)
 - 2026-04-29 — Header com tag hardcoded → v0.5.0 (plano do Claude dinâmico no SessionHeader)
 - 2026-04-29 — Workspaces/sessions reordenando ao abrir nova sessão + atalhos cmd+N visíveis → v0.5.0

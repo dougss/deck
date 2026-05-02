@@ -21,6 +21,7 @@ import { buildApplicationMenu } from './menu'
 import { EventWatcher, DECK_DIR } from './event-watcher'
 import { registerHookHandlers } from './ipc-handlers-hooks'
 import { GitManager } from './git-manager'
+import { GitDiffManager } from './git-diff-manager'
 import { registerGitHandlers } from './ipc-handlers-git'
 import { registerSshHandlers } from './ipc-handlers-ssh'
 import { runSshSmoke } from './ssh-smoke'
@@ -49,6 +50,7 @@ const ptyRegistry = new PtyRegistry()
 const eventWatcher = new EventWatcher()
 let mainWindow: BrowserWindow | null = null
 let pathCheckInterval: ReturnType<typeof setInterval> | null = null
+let gitDiffManagerRef: GitDiffManager | null = null
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -58,6 +60,7 @@ function createWindow(): void {
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 14 },
     backgroundColor: '#09090b',
+    acceptFirstMouse: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -121,6 +124,8 @@ app.whenReady().then(async () => {
   const workspaceManager = new WorkspaceManager(db)
   const sessionManager = new SessionManager(db, ptyRegistry, getSettings)
   const gitManager = new GitManager()
+  const gitDiffManager = new GitDiffManager()
+  gitDiffManagerRef = gitDiffManager
   registerWorkspaceHandlers(workspaceManager, sessionManager, () => mainWindow)
   registerSessionHandlers(sessionManager, () => mainWindow)
   registerPtyHandlers(ptyRegistry, () => mainWindow)
@@ -128,7 +133,7 @@ app.whenReady().then(async () => {
   registerSettingsHandlers()
   registerSystemHandlers()
   registerHookHandlers()
-  registerGitHandlers(gitManager, sessionManager, () => mainWindow)
+  registerGitHandlers(gitManager, gitDiffManager, sessionManager, () => mainWindow)
   registerSshHandlers()
 
   // Ensure ~/.deck/ exists before starting event watcher
@@ -206,6 +211,7 @@ app.on('before-quit', () => {
   if (pathCheckInterval !== null) clearInterval(pathCheckInterval)
   eventWatcher.stop()
   ptyRegistry.killAll()
+  gitDiffManagerRef?.dispose().catch(() => {})
 })
 
 app.on('window-all-closed', () => {
