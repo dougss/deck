@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Pin, MoreHorizontal, RotateCcw } from 'lucide-react'
+import { MoreHorizontal, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useDeckStore } from '@/stores/deck'
 
 interface PanelHeaderProps {
   title: string
@@ -18,8 +17,6 @@ export function PanelHeader({
   showMenu = false,
   onReset
 }: PanelHeaderProps): React.JSX.Element {
-  const pinned = useDeckStore((s) => s.rightPanelPinned)
-  const setRightPanelPinned = useDeckStore((s) => s.setRightPanelPinned)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -51,18 +48,6 @@ export function PanelHeader({
         )}
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
-        <button
-          title={pinned ? 'Unpin panel (overlay)' : 'Pin panel (push main)'}
-          onClick={() => setRightPanelPinned(!pinned)}
-          className={cn(
-            'flex items-center justify-center w-6 h-6 rounded cursor-pointer transition-colors duration-100',
-            pinned
-              ? 'text-op-accent bg-op-accent-soft'
-              : 'text-op-zinc-400 hover:text-op-zinc-200 hover:bg-op-surface-3'
-          )}
-        >
-          <Pin size={14} strokeWidth={1.6} fill={pinned ? 'currentColor' : 'none'} />
-        </button>
         {showMenu && (
           <div ref={menuRef} className="relative">
             <button

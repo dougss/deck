@@ -72,6 +72,11 @@ export function buildApplicationMenu(mainWindow: BrowserWindow): Menu {
           click: () => send(IPC.SHORTCUT_BRANCH_SWITCHER)
         },
         {
+          label: 'Toggle Changes Panel',
+          accelerator: 'CmdOrCtrl+Shift+G',
+          click: () => send(IPC.SHORTCUT_TOGGLE_DIFF)
+        },
+        {
           label: 'Toggle Embedded Terminal',
           accelerator: 'Control+`',
           click: () => send(IPC.SHORTCUT_TOGGLE_EMBEDDED)

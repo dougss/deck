@@ -7,10 +7,12 @@ import { CommandPalette } from './components/CommandPalette'
 import { ToastProvider } from './components/ui/Toast'
 import { useDeckBootstrap } from './hooks/useDeckBootstrap'
 import { useDeckShortcuts } from './hooks/useDeckShortcuts'
+import { useDiffSubscriptions } from './hooks/useDiffSubscriptions'
 
 export function App(): React.JSX.Element {
   useDeckBootstrap()
   useDeckShortcuts()
+  useDiffSubscriptions()
   return (
     <ToastProvider>
       <AppShell>

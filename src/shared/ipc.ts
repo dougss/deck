@@ -48,6 +48,7 @@ export const IPC = {
   SHORTCUT_BRANCH_SWITCHER: 'shortcut:branch-switcher',
   SHORTCUT_COMMAND_PALETTE: 'shortcut:command-palette',
   SHORTCUT_TOGGLE_EMBEDDED: 'shortcut:toggle-embedded',
+  SHORTCUT_TOGGLE_DIFF: 'shortcut:toggle-diff',
   SETTINGS_GET: 'settings:get',
   SETTINGS_SET: 'settings:set',
   SYSTEM_OPEN_IN_EDITOR: 'system:open-in-editor',
@@ -62,6 +63,11 @@ export const IPC = {
   GIT_CHECKOUT: 'git:checkout',
   GIT_STASH_CHECKOUT: 'git:stash-checkout',
   GIT_INFO_UPDATED: 'git:info-updated',
+  GIT_DIFF_WATCH_START: 'git-diff:watch-start',
+  GIT_DIFF_WATCH_STOP: 'git-diff:watch-stop',
+  GIT_DIFF_GET_FILE: 'git-diff:get-file',
+  GIT_DIFF_REFRESH: 'git-diff:refresh',
+  GIT_DIFF_SUMMARY_UPDATED: 'git-diff:summary-updated',
   SSH_LIST_HOSTS: 'ssh:list-hosts'
 } as const
 
@@ -359,6 +365,56 @@ export interface DeckSshApi {
   listHosts(): Promise<SshHost[]>
 }
 
+export type FileChangeStatus = 'modified' | 'added' | 'deleted' | 'renamed' | 'untracked'
+
+export interface FileChange {
+  path: string
+  oldPath?: string
+  status: FileChangeStatus
+  staged: boolean
+  added: number
+  deleted: number
+  isBinary: boolean
+}
+
+export interface DiffSummary {
+  cwd: string
+  isRepo: boolean
+  files: FileChange[]
+  totals: { added: number; deleted: number; files: number }
+}
+
+export interface GitDiffWatchRequest {
+  cwd: string
+}
+
+export interface GitDiffGetFileRequest {
+  cwd: string
+  path: string
+  staged: boolean
+}
+
+export interface GitDiffFileResult {
+  path: string
+  oldContent: string | null
+  newContent: string | null
+  isBinary: boolean
+  truncated: boolean
+}
+
+export interface GitDiffSummaryUpdatedEvent {
+  cwd: string
+  summary: DiffSummary
+}
+
+export interface DeckGitDiffApi {
+  watchStart(cwd: string): Promise<DiffSummary>
+  watchStop(cwd: string): Promise<void>
+  getFile(req: GitDiffGetFileRequest): Promise<GitDiffFileResult>
+  refresh(cwd: string): Promise<DiffSummary>
+  onSummaryUpdated(cb: (event: GitDiffSummaryUpdatedEvent) => void): () => void
+}
+
 export interface DeckShortcutsApi {
   onNewSession(cb: () => void): () => void
   onStopSession(cb: () => void): () => void
@@ -368,6 +424,7 @@ export interface DeckShortcutsApi {
   onBranchSwitcher(cb: () => void): () => void
   onCommandPalette(cb: () => void): () => void
   onToggleEmbedded(cb: () => void): () => void
+  onToggleDiff(cb: () => void): () => void
 }
 
 export interface DeckApi {
@@ -381,5 +438,6 @@ export interface DeckApi {
   system: DeckSystemApi
   hooks: DeckHooksApi
   git: DeckGitApi
+  gitDiff: DeckGitDiffApi
   ssh: DeckSshApi
 }

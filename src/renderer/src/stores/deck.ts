@@ -26,7 +26,7 @@ type EmbeddedToggleMap = Record<SessionId, boolean>
 type EmbeddedFocusSide = 'main' | 'embedded'
 type EmbeddedFocusMap = Record<SessionId, EmbeddedFocusSide>
 
-type RightPanelMode = 'planner' | 'terminal'
+type RightPanelMode = 'planner' | 'terminal' | 'diff'
 
 interface DeckState {
   workspaces: Workspace[]

@@ -1,4 +1,4 @@
-import { Pin, Settings, Square } from 'lucide-react'
+import { Settings, Square } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDeckStore } from '@/stores/deck'
 import type { Session } from '../../../../shared/ipc'
@@ -14,8 +14,6 @@ export function PlannerHeader({
   onStop,
   onOpenSettings
 }: PlannerHeaderProps): React.JSX.Element {
-  const pinned = useDeckStore((s) => s.rightPanelPinned)
-  const setRightPanelPinned = useDeckStore((s) => s.setRightPanelPinned)
   const parentSession = useDeckStore((s) =>
     planner?.parentSessionId
       ? (s.sessions.find((x) => x.id === planner.parentSessionId) ?? null)
@@ -49,19 +47,6 @@ export function PlannerHeader({
           className="flex items-center justify-center w-6 h-6 rounded cursor-pointer text-op-zinc-400 hover:text-op-zinc-200 hover:bg-op-surface-3 transition-colors duration-100"
         >
           <Settings size={14} strokeWidth={1.6} />
-        </button>
-
-        <button
-          title={pinned ? 'Unpin panel (overlay)' : 'Pin panel (push main)'}
-          onClick={() => setRightPanelPinned(!pinned)}
-          className={cn(
-            'flex items-center justify-center w-6 h-6 rounded cursor-pointer transition-colors duration-100',
-            pinned
-              ? 'text-op-accent bg-op-accent-soft'
-              : 'text-op-zinc-400 hover:text-op-zinc-200 hover:bg-op-surface-3'
-          )}
-        >
-          <Pin size={14} strokeWidth={1.6} fill={pinned ? 'currentColor' : 'none'} />
         </button>
 
         {isAttached && (

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDeckStore, useActivePlannerSession } from '@/stores/deck'
+import { DiffPanel } from './DiffPanel'
 import { PanelHeader } from './PanelHeader'
 import { PlannerEmptyState } from './PlannerEmptyState'
 import { PlannerHeader } from './PlannerHeader'
@@ -56,20 +57,21 @@ export function RightPanel(): React.JSX.Element {
 
   return (
     <div
-      className="w-full h-full bg-op-surface border-l border-op-border flex flex-col"
+      className="w-full h-full bg-op-surface border-l border-op-border flex flex-col overflow-hidden"
       style={{
         boxShadow: isOverlay
           ? '-14px 0 36px -8px rgba(0,0,0,0.5), -2px 0 0 0 var(--op-border)'
           : 'none'
       }}
     >
-      {activePanel === 'planner' ? (
+      {activePanel === 'planner' && (
         <PlannerHeader
           planner={plannerSession ?? null}
           onStop={handleStopPlanner}
           onOpenSettings={() => setPlannerSettingsOpen(true)}
         />
-      ) : (
+      )}
+      {activePanel === 'terminal' && (
         <PanelHeader
           title="Terminal"
           context={terminalContext || undefined}
@@ -109,6 +111,14 @@ export function RightPanel(): React.JSX.Element {
             onPidChange={setPid}
           />
         )}
+
+        {/* Diff panel */}
+        <div
+          className="absolute inset-0 flex flex-col min-w-0"
+          style={{ display: activePanel === 'diff' ? 'flex' : 'none' }}
+        >
+          {activePanel === 'diff' && <DiffPanel />}
+        </div>
       </div>
 
       {activePanel === 'terminal' && (

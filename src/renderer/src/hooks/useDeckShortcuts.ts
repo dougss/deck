@@ -77,6 +77,10 @@ export function useDeckShortcuts(): void {
       toggleEmbeddedTerminal(activeSessionId)
     })
 
+    const unsubDiff = window.deck.shortcuts.onToggleDiff(() => {
+      useDeckStore.getState().toggleRightPanel('diff')
+    })
+
     return () => {
       unsubNew()
       unsubStop()
@@ -86,6 +90,7 @@ export function useDeckShortcuts(): void {
       unsubBranch()
       unsubPalette()
       unsubEmbedded()
+      unsubDiff()
     }
   }, [])
 }

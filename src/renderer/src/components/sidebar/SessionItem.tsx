@@ -4,6 +4,7 @@ import { StatusDot, type StatusDotVariant } from '@/components/ui/StatusDot'
 import { formatRelativeTime } from '@/lib/time'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { useDeckStore } from '@/stores/deck'
+import { useDiffSummary } from '@/stores/diff'
 import type { EditorPreset, Session } from '../../../../shared/ipc'
 import { SessionContextMenu } from './SessionContextMenu'
 
@@ -25,6 +26,11 @@ export function SessionItem({
   onDelete
 }: SessionItemProps): React.JSX.Element {
   const notificationState = useDeckStore((s) => s.notificationStates[session.id] ?? 'idle')
+  const diffSummary = useDiffSummary(session.type === 'ssh' ? null : session.cwd)
+  const diffAdded = diffSummary?.totals.added ?? 0
+  const diffDeleted = diffSummary?.totals.deleted ?? 0
+  const diffFiles = diffSummary?.totals.files ?? 0
+  const hasDiff = diffSummary?.isRepo === true && diffFiles > 0
 
   let dotVariant: StatusDotVariant
   if (!isActive && notificationState === 'error') {
@@ -180,8 +186,28 @@ export function SessionItem({
           )}
         </div>
 
-        <div className="font-mono text-[10px] text-op-zinc-600 mt-[7px] flex-shrink-0">
-          {formatRelativeTime(session.lastActiveAt)}
+        <div className="flex flex-col items-end gap-[2px] mt-[5px] flex-shrink-0">
+          <div className="font-mono text-[10px] text-op-zinc-600">
+            {formatRelativeTime(session.lastActiveAt)}
+          </div>
+          {hasDiff && (
+            <div
+              className="font-mono text-[10px] tabular-nums leading-none"
+              title={`${diffFiles} ${diffFiles === 1 ? 'file' : 'files'} changed`}
+            >
+              {diffAdded > 0 && (
+                <span className={isActive ? 'text-emerald-400' : 'text-emerald-400/60'}>
+                  +{diffAdded}
+                </span>
+              )}
+              {diffAdded > 0 && diffDeleted > 0 && <span className="text-op-zinc-700"> </span>}
+              {diffDeleted > 0 && (
+                <span className={isActive ? 'text-rose-400' : 'text-rose-400/60'}>
+                  −{diffDeleted}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </SessionContextMenu>

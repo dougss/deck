@@ -1,9 +1,13 @@
 import { ipcMain, type BrowserWindow } from 'electron'
 import type { GitManager } from './git-manager'
+import type { GitDiffManager } from './git-diff-manager'
 import type { SessionManager } from './session-manager'
 import {
   IPC,
   type GitCheckoutRequest,
+  type GitDiffGetFileRequest,
+  type GitDiffSummaryUpdatedEvent,
+  type GitDiffWatchRequest,
   type GitGetInfoRequest,
   type GitInfoUpdatedEvent,
   type GitListBranchesRequest,
@@ -12,6 +16,7 @@ import {
 
 export function registerGitHandlers(
   gitManager: GitManager,
+  gitDiffManager: GitDiffManager,
   sessionManager: SessionManager,
   getWindow: () => BrowserWindow | null
 ): void {
@@ -65,5 +70,32 @@ export function registerGitHandlers(
       .getInfo(session.cwd)
       .then((gitInfo) => push({ sessionId, gitInfo }))
       .catch(() => {})
+  })
+
+  // ── Diff panel ────────────────────────────────────────────────────────────
+  const pushDiff = (payload: GitDiffSummaryUpdatedEvent): void => {
+    const win = getWindow()
+    if (!win || win.isDestroyed()) return
+    win.webContents.send(IPC.GIT_DIFF_SUMMARY_UPDATED, payload)
+  }
+
+  gitDiffManager.onSummary((cwd, summary) => {
+    pushDiff({ cwd, summary })
+  })
+
+  ipcMain.handle(IPC.GIT_DIFF_WATCH_START, async (_event, req: GitDiffWatchRequest) => {
+    return gitDiffManager.watchStart(req.cwd)
+  })
+
+  ipcMain.handle(IPC.GIT_DIFF_WATCH_STOP, async (_event, req: GitDiffWatchRequest) => {
+    await gitDiffManager.watchStop(req.cwd)
+  })
+
+  ipcMain.handle(IPC.GIT_DIFF_REFRESH, async (_event, req: GitDiffWatchRequest) => {
+    return gitDiffManager.refresh(req.cwd)
+  })
+
+  ipcMain.handle(IPC.GIT_DIFF_GET_FILE, async (_event, req: GitDiffGetFileRequest) => {
+    return gitDiffManager.getFileDiff(req.cwd, req.path, req.staged)
   })
 }

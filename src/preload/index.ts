@@ -4,11 +4,14 @@ import {
   IPC,
   type DeckApi,
   type DeckGitApi,
+  type DeckGitDiffApi,
   type DeckSettings,
   type DeckSettingsApi,
   type DeckSystemApi,
   type DeckHooksApi,
   type DeckSshApi,
+  type GitDiffGetFileRequest,
+  type GitDiffSummaryUpdatedEvent,
   type GitInfoUpdatedEvent,
   type HookEventPayload,
   type HookInstanceStatus,
@@ -30,6 +33,7 @@ type WorkspaceUpdateListener = (event: WorkspaceUpdateEvent) => void
 type SessionUpdateListener = (event: SessionUpdateEvent) => void
 type HookEventListener = (payload: HookEventPayload) => void
 type GitInfoUpdatedListener = (event: GitInfoUpdatedEvent) => void
+type GitDiffSummaryListener = (event: GitDiffSummaryUpdatedEvent) => void
 
 const dataListeners = new Map<PtyId, Set<DataListener>>()
 const exitListeners = new Map<PtyId, Set<ExitListener>>()
@@ -37,6 +41,7 @@ const workspaceUpdateListeners = new Set<WorkspaceUpdateListener>()
 const sessionUpdateListeners = new Set<SessionUpdateListener>()
 const hookEventListeners = new Set<HookEventListener>()
 const gitInfoUpdatedListeners = new Set<GitInfoUpdatedListener>()
+const gitDiffSummaryListeners = new Set<GitDiffSummaryListener>()
 
 ipcRenderer.on(IPC.PTY_DATA, (_event, payload: PtyDataEvent) => {
   const set = dataListeners.get(payload.ptyId)
@@ -87,6 +92,16 @@ ipcRenderer.on(IPC.GIT_INFO_UPDATED, (_event, event: GitInfoUpdatedEvent) => {
       cb(event)
     } catch (err) {
       console.error('[preload] git:info-updated listener threw:', err)
+    }
+  }
+})
+
+ipcRenderer.on(IPC.GIT_DIFF_SUMMARY_UPDATED, (_event, event: GitDiffSummaryUpdatedEvent) => {
+  for (const cb of gitDiffSummaryListeners) {
+    try {
+      cb(event)
+    } catch (err) {
+      console.error('[preload] git-diff:summary-updated listener threw:', err)
     }
   }
 })
@@ -238,6 +253,11 @@ const deck: DeckApi = {
       const listener = (): void => cb()
       ipcRenderer.on(IPC.SHORTCUT_TOGGLE_EMBEDDED, listener)
       return () => ipcRenderer.removeListener(IPC.SHORTCUT_TOGGLE_EMBEDDED, listener)
+    },
+    onToggleDiff(cb) {
+      const listener = (): void => cb()
+      ipcRenderer.on(IPC.SHORTCUT_TOGGLE_DIFF, listener)
+      return () => ipcRenderer.removeListener(IPC.SHORTCUT_TOGGLE_DIFF, listener)
     }
   } satisfies DeckShortcutsApi,
   settings: {
@@ -296,6 +316,26 @@ const deck: DeckApi = {
       }
     }
   } satisfies DeckGitApi,
+  gitDiff: {
+    watchStart(cwd: string) {
+      return ipcRenderer.invoke(IPC.GIT_DIFF_WATCH_START, { cwd })
+    },
+    watchStop(cwd: string) {
+      return ipcRenderer.invoke(IPC.GIT_DIFF_WATCH_STOP, { cwd })
+    },
+    getFile(req: GitDiffGetFileRequest) {
+      return ipcRenderer.invoke(IPC.GIT_DIFF_GET_FILE, req)
+    },
+    refresh(cwd: string) {
+      return ipcRenderer.invoke(IPC.GIT_DIFF_REFRESH, { cwd })
+    },
+    onSummaryUpdated(cb: GitDiffSummaryListener) {
+      gitDiffSummaryListeners.add(cb)
+      return () => {
+        gitDiffSummaryListeners.delete(cb)
+      }
+    }
+  } satisfies DeckGitDiffApi,
   ssh: {
     listHosts() {
       return ipcRenderer.invoke(IPC.SSH_LIST_HOSTS)

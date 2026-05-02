@@ -193,3 +193,54 @@
     overflow: hidden;
   }
 }
+
+/* Global scrollbars — slim, dark, fades in on hover. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 8px;
+  transition: background-color 120ms ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* xterm has its own scroll layer — leave that one alone. */
+.xterm ::-webkit-scrollbar,
+.xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* react-diff-viewer-continued — force horizontal scroll for long lines.
+   The lib renders a <table width=100%> with pre-wrap by default; we override
+   so long code lines stay on one line and the wrapper scrolls horizontally. */
+.deck-diff-scroll table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+}
+.deck-diff-scroll pre,
+.deck-diff-scroll td,
+.deck-diff-scroll td * {
+  white-space: pre !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
