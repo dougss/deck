@@ -160,6 +160,8 @@ export class SessionManager extends EventEmitter<EventMap> {
           ? 'shell'
           : row.type === 'gemini'
             ? 'gemini'
+          : row.type === 'codex'
+            ? 'codex'
             : 'claude-code') as SessionType,
       claudeSessionId: row.claude_session_id ?? null,
       parentSessionId: row.parent_session_id ?? null,
@@ -197,6 +199,8 @@ export class SessionManager extends EventEmitter<EventMap> {
           ? 'shell'
           : req.type === 'gemini'
             ? 'gemini'
+          : req.type === 'codex'
+            ? 'codex'
             : 'claude-code'
     const subText = req.subText ?? ''
     const kind = req.kind ?? 'executor'
@@ -234,8 +238,18 @@ export class SessionManager extends EventEmitter<EventMap> {
       if (config.allowedTools) parts.push(`--allowedTools`, config.allowedTools)
       parts.push(`--append-system-prompt`, shellQuote(promptNormalized))
       command = parts.join(' ')
+    } else if (type === 'shell') {
+      command = req.command ?? ''
+    } else if (type === 'codex') {
+      const explicit = (req.command ?? '').trim()
+      if (explicit.length > 0) {
+        command = explicit
+      } else {
+        const codexPath = (this.getSettings().codexPath ?? '').trim()
+        command = codexPath.length > 0 ? codexPath : 'codex'
+      }
     } else {
-      command = type === 'shell' ? (req.command ?? '') : validateNonEmpty('command', req.command)
+      command = validateNonEmpty('command', req.command)
     }
 
     const id = randomUUID()

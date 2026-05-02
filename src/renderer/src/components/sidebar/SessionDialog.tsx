@@ -16,7 +16,7 @@ const LAST_TYPE_KEY = 'deck:lastSessionType'
 
 function getLastType(): SessionType {
   const stored = localStorage.getItem(LAST_TYPE_KEY)
-  if (stored === 'shell' || stored === 'claude-code' || stored === 'ssh' || stored === 'gemini')
+  if (stored === 'shell' || stored === 'claude-code' || stored === 'ssh' || stored === 'codex' || stored === 'gemini')
     return stored
   return 'claude-code'
 }
@@ -25,6 +25,7 @@ function autoName(workspace: Workspace, type: SessionType, sshAlias?: string): s
   if (type === 'shell') return `${workspace.name}/shell`
   if (type === 'ssh') return `${workspace.name}/ssh:${sshAlias ?? ''}`
   if (type === 'gemini') return `${workspace.name}/gemini`
+  if (type === 'codex') return `${workspace.name}/codex`
   return `${workspace.name}/new-session`
 }
 
@@ -126,7 +127,8 @@ export function SessionDialog({
         workspaceId: selectedWorkspace.id,
         name: name.trim(),
         cwd: type === 'ssh' ? selectedWorkspace.path : cwd.trim(),
-        command: type === 'shell' ? '' : type === 'ssh' ? sshAlias : command.trim(),
+        command:
+          type === 'shell' || type === 'codex' ? '' : type === 'ssh' ? sshAlias : command.trim(),
         subText: subText.trim(),
         type
       })
@@ -169,6 +171,11 @@ export function SessionDialog({
                     t: 'claude-code' as SessionType,
                     label: 'Claude Code',
                     icon: <Bot size={14} strokeWidth={1.75} />
+                  },
+                  {
+                    t: 'codex' as SessionType,
+                    label: 'Codex',
+                    icon: <Sparkles size={14} strokeWidth={1.75} />
                   },
                   {
                     t: 'shell' as SessionType,

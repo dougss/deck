@@ -9,6 +9,7 @@ function getConfigLabel(sessionType: SessionType): { label: string; variant: Con
   if (sessionType === 'shell') return { label: 'shell', variant: 'neutral' }
   if (sessionType === 'ssh') return { label: 'ssh', variant: 'neutral' }
   if (sessionType === 'gemini') return { label: 'gemini', variant: 'cyan' }
+  if (sessionType === 'codex') return { label: 'codex', variant: 'cyan' }
   return { label: 'claude-code', variant: 'neutral' }
 }
 
