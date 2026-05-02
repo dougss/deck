@@ -265,7 +265,7 @@ export interface DeckDialogApi {
   pickFolder(): Promise<string | null>
 }
 
-export type EditorPreset = 'zed' | 'cursor' | 'vscode' | 'fork' | 'custom'
+export type EditorPreset = 'zed' | 'cursor' | 'vscode' | 'fork' | 'finder' | 'custom'
 
 export interface DeckSettings {
   customEditorCommand: string | null

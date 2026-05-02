@@ -30,6 +30,8 @@ export function registerSystemHandlers(): void {
     } else if (req.editor === 'fork') {
       // Fork CLI switches to the repo if Fork is already open; falls back to open -a if CLI missing
       command = `command -v fork >/dev/null 2>&1 && fork "${escapedPath}" || open -a Fork "${escapedPath}"`
+    } else if (req.editor === 'finder') {
+      command = `/usr/bin/open "${escapedPath}"`
     } else {
       const bin = PRESET_BINS[req.editor]
       command = `${bin} "${escapedPath}"`

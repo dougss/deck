@@ -9,7 +9,14 @@ function getLastEditorFromStorage(): EditorPreset {
   const storedValue = localStorage.getItem(LAST_EDITOR_KEY)
   if (storedValue) {
     // Validate against EditorPreset union type
-    const validEditors: readonly EditorPreset[] = ['zed', 'cursor', 'vscode', 'fork', 'custom']
+    const validEditors: readonly EditorPreset[] = [
+      'zed',
+      'cursor',
+      'vscode',
+      'fork',
+      'finder',
+      'custom'
+    ]
     const isValid = validEditors.includes(storedValue as EditorPreset)
 
     if (isValid) {

@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/DropdownMenu'
-import { ChevronDown, Code, SquareCode, Zap, Wrench } from 'lucide-react'
+import { ChevronDown, Code, SquareCode, Zap, Wrench, Folder } from 'lucide-react'
 
 interface OpenInSplitButtonProps {
   session: Session
@@ -24,6 +24,8 @@ function getEditorLabel(editor: EditorPreset): string {
       return 'VS Code'
     case 'fork':
       return 'Fork'
+    case 'finder':
+      return 'Finder'
     case 'custom':
       return 'Custom'
   }
@@ -56,6 +58,8 @@ function getEditorIcon(editor: EditorPreset): React.ReactNode {
           <path d="M16 6h4" />
         </svg>
       )
+    case 'finder':
+      return <Folder size={14} strokeWidth={1.75} />
     case 'custom':
       return <Wrench size={14} strokeWidth={1.75} />
     default:
@@ -132,6 +136,9 @@ export function OpenInSplitButton({
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => void handleSelectEditor('fork')}>
               Fork
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => void handleSelectEditor('finder')}>
+              Finder
             </DropdownMenuItem>
             {customEditorCommand && customEditorCommand.trim() !== '' && (
               <>
