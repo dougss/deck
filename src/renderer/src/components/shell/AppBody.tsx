@@ -30,6 +30,14 @@ export function AppBody({ children }: AppBodyProps): React.JSX.Element {
     isPinnedRef.current = isPinned
   }, [isPinned])
 
+  // Once the right panel has been opened, keep it mounted so PTYs/xterm
+  // instances inside (UtilityTerminal, PlannerTerminalHost) survive close/open.
+  // Visibility is then toggled via CSS instead of unmount.
+  const [hasOpenedRightPanel, setHasOpenedRightPanel] = useState(false)
+  if (activePanel !== null && !hasOpenedRightPanel) {
+    setHasOpenedRightPanel(true)
+  }
+
   const [rpWidth, setRpWidth] = useState<number>(loadRpWidth)
   const mainContentRef = useRef<HTMLDivElement>(null)
 
@@ -68,7 +76,7 @@ export function AppBody({ children }: AppBodyProps): React.JSX.Element {
         {children}
       </div>
       <ActivityBar />
-      {activePanel !== null && (
+      {hasOpenedRightPanel && (
         <ResizablePanel
           side="right"
           storageKey={RP_STORAGE_KEY}
@@ -77,6 +85,7 @@ export function AppBody({ children }: AppBodyProps): React.JSX.Element {
           onWidthChange={handleRpWidthChange}
           onWidthCommit={handleRpWidthCommit}
           className="absolute top-0 bottom-8 right-12 z-10"
+          hidden={activePanel === null}
         >
           <RightPanel />
         </ResizablePanel>

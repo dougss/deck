@@ -10,6 +10,7 @@ export interface ResizablePanelProps {
   onWidthChange?: (width: number) => void
   onWidthCommit?: (width: number) => void
   className?: string
+  hidden?: boolean
   children: React.ReactNode
 }
 
@@ -22,6 +23,7 @@ export function ResizablePanel({
   onWidthChange,
   onWidthCommit,
   className = '',
+  hidden = false,
   children
 }: ResizablePanelProps): React.JSX.Element {
   const { width, setWidthCommitted, resetToDefault } = useResizablePanelWidth({
@@ -111,18 +113,29 @@ export function ResizablePanel({
   const indicatorMargin = side === 'left' ? 'ml-[1px]' : 'mr-[1px]'
 
   return (
-    <div ref={containerRef} className={className} style={{ width: `${width}px` }}>
+    <div
+      ref={containerRef}
+      className={className}
+      style={{
+        width: `${width}px`,
+        display: hidden ? 'none' : undefined,
+        pointerEvents: hidden ? 'none' : undefined
+      }}
+      aria-hidden={hidden || undefined}
+    >
       {children}
-      {/* Drag handle — 4px invisible hit area on the inner edge */}
-      <div
-        className={`absolute top-0 ${handlePosition} h-full w-1 z-20 cursor-ew-resize group`}
-        onMouseDown={handleMouseDown}
-        onDoubleClick={handleDoubleClick}
-      >
+      {!hidden && (
+        /* Drag handle — 4px invisible hit area on the inner edge */
         <div
-          className={`h-full w-[2px] ${indicatorMargin} transition-colors duration-100 group-hover:bg-op-border`}
-        />
-      </div>
+          className={`absolute top-0 ${handlePosition} h-full w-1 z-20 cursor-ew-resize group`}
+          onMouseDown={handleMouseDown}
+          onDoubleClick={handleDoubleClick}
+        >
+          <div
+            className={`h-full w-[2px] ${indicatorMargin} transition-colors duration-100 group-hover:bg-op-border`}
+          />
+        </div>
+      )}
     </div>
   )
 }

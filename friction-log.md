@@ -15,6 +15,7 @@ Post-mortems longos não vão aqui — vão no body do PR ou em
 
 ## Pendente
 
+- 2026-05-05 - Sidebar da direita esta reiniciando a sessão ao fechar/abrir. Deve manter a sessão ativa.
 (vazio)
 
 ## Em andamento
